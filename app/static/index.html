@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>永洪 AI POC</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <h1>永洪 AI 本地服务测试</h1>
+    <p id="health">正在检查服务……</p>
+    <textarea id="rows" rows="10">[{"event_id":10001,"os_name":"Android","failure_rate":0.05}]</textarea>
+    <textarea id="question" rows="3">分析当前失败率。</textarea>
+    <button id="send">提交</button>
+    <pre id="output"></pre>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

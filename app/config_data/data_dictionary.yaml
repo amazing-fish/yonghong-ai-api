@@ -1,0 +1,26 @@
+datasets:
+  event_summary:
+    grain: 日期 + 事件 + 系统 + SDK版本
+    fields:
+      event_date: 事件日期
+      event_id: 事件编号
+      os_name: 手机操作系统
+      sdk_pure_version: SDK纯版本
+      total_count: 成功与失败事件总数
+      success_count: 成功事件数
+      failure_count: 失败事件数
+      failure_rate: 失败数除以成功与失败总数
+      avg_total_time: 平均耗时，单位毫秒
+
+  failure_reasons:
+    grain: 日期 + 事件 + 系统 + SDK版本 + 失败原因
+    fields:
+      failure_reason: 失败原因
+      failure_count: 该原因失败数
+      failure_percentage: 该原因占全部失败比例
+
+metrics:
+  failure_rate:
+    formula: failure_count / (success_count + failure_count)
+  success_rate:
+    formula: success_count / (success_count + failure_count)
