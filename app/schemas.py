@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ChatMessage(BaseModel):
@@ -30,6 +30,16 @@ class JobCreateRequest(BaseModel):
     @classmethod
     def limit_history(cls, value: list[ChatMessage]) -> list[ChatMessage]:
         return value[-10:]
+
+    @model_validator(mode="after")
+    def require_unique_fields(self) -> "JobCreateRequest":
+        sources = [field.source for field in self.fields]
+        names = [field.name for field in self.fields]
+        if len(sources) != len(set(sources)):
+            raise ValueError("fields 中的 source 必须唯一")
+        if len(names) != len(set(names)):
+            raise ValueError("fields 中的 name 必须唯一")
+        return self
 
 
 class JobAcceptedResponse(BaseModel):
