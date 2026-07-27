@@ -11,11 +11,18 @@ class ChatMessage(BaseModel):
     content: str = Field(min_length=1, max_length=20000)
 
 
+class BoundField(BaseModel):
+    source: str = Field(min_length=1, max_length=100, pattern=r"^column\d+$")
+    name: str = Field(min_length=1, max_length=300)
+    role: str = Field(default="unknown", pattern="^(dimension|measure|unknown)$")
+
+
 class JobCreateRequest(BaseModel):
     question: str = Field(min_length=1, max_length=10000)
     dashboard: str | None = Field(default=None, max_length=300)
     dataset_name: str | None = Field(default=None, max_length=300)
     filters: dict[str, Any] = Field(default_factory=dict)
+    fields: list[BoundField] = Field(default_factory=list, max_length=200)
     rows: list[dict[str, Any]] = Field(default_factory=list)
     history: list[ChatMessage] = Field(default_factory=list)
 
