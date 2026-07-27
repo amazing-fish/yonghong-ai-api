@@ -56,6 +56,7 @@
     render();
   }
   bindEvents();
+  setBusy(state.busy);
   state.initialized = true;
   refreshSummary();
 
