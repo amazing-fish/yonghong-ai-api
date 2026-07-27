@@ -49,11 +49,14 @@
   var currentOptions = typeof options !== "undefined" && options ? options : {};
   state.boundRows = mapOptionsData(currentOptions.data);
 
-  if (!state.initialized) {
+  // 永洪在字段绑定或筛选刷新时可能清空容器 DOM，但保留挂载在
+  // container 上的状态对象。此时 initialized 仍为 true，必须重新构建界面。
+  var uiExists = !!container.querySelector('[data-action="send"]');
+  if (!state.initialized || !uiExists) {
     render();
-    bindEvents();
-    state.initialized = true;
   }
+  bindEvents();
+  state.initialized = true;
   refreshSummary();
 
   function mapOptionsData(data) {
