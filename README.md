@@ -115,21 +115,29 @@ var container = document.getElementById($container);
 
 ### 模式 A：`options.data`
 
-组件默认按以下顺序映射绑定字段：
+组件会同时检查 `options.columnN` 和 `options.data` 行对象，自动收集绑定给当前自定义绘图组件的全部 `columnN` 字段，并按数字顺序提交。即使筛选结果暂时为 0 行，只要永洪仍提供 `options.columnN`，绑定字段也不会丢失。
 
-```text
-column1  event_date
-column2  event_id
-column3  os_name
-column4  sdk_pure_version
-column5  total_count
-column6  success_count
-column7  failure_count
-column8  failure_rate
-column9  avg_total_time
+永洪官方的[自定义绘图说明](https://m.yonghongtech.com/real-help/Z-Suite/11.0/ch/component_js.html)只定义了：数据列按绑定顺序暴露为 `column1`、`column2`……。公开的 `options.data` 接口没有承诺返回原字段显示名、维度/度量角色、聚合方式或计算公式。因此：
+
+- 不配置字段映射也能提交全部绑定值；字段名保持 `columnN`，角色为 `unknown`；
+- 为了让模型理解业务语义，可以在“字段映射 JSON”中按绑定顺序补充业务名和角色；
+- 计算列只要拖入当前组件，其计算结果会像普通字段一样提交；但显示名和计算表达式不能从已公开的 `options.data` 自动读取；
+- “测试取数与字段”会显示 `options` 的运行时键、识别到的全部字段及样例数据。如果特定永洪版本额外提供了元数据键，可以根据该诊断结果继续适配。
+
+字段映射是可选的，例如：
+
+```json
+[
+  {"source": "column1", "name": "event_date", "role": "dimension"},
+  {"source": "column2", "name": "usage_count", "role": "measure"}
+]
 ```
 
-该模式适合解释当前筛选后的图表数据，不需要配置永洪 WebAPI。
+映射配置按“当前报表 + 当前组件容器”隔离存储，多个组件不会互相套用字段顺序。发生别名碰撞时，组件会生成唯一回退名；API 也会拒绝重复的 `source` 或 `name`。
+
+`options.data` 只包含明确绑定给当前组件的数据，不会自动读取整个数据集或看板中其他组件的字段。默认最多向模型传递 300 行、每行 40 列；可通过 `MAX_ROWS`、`MAX_COLUMNS` 调整，但仍受 `MAX_CONTEXT_CHARS` 限制。
+
+该模式直接使用永洪注入的筛选后数据，不需要自行连接 `wss://.../bi/server`，也不要复制或上传 `YHBISESSIONID`。
 
 ### 模式 B：永洪 WebAPI
 
@@ -173,6 +181,10 @@ Content-Type: application/json
     "event_id": 10001,
     "os_name": "Android"
   },
+  "fields": [
+    {"source": "column1", "name": "event_date", "role": "dimension"},
+    {"source": "column2", "name": "failure_rate", "role": "measure"}
+  ],
   "rows": [
     {
       "event_date": "2026-01-01",

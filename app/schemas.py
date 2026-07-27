@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ChatMessage(BaseModel):
@@ -11,11 +11,18 @@ class ChatMessage(BaseModel):
     content: str = Field(min_length=1, max_length=20000)
 
 
+class BoundField(BaseModel):
+    source: str = Field(min_length=1, max_length=100, pattern=r"^column\d+$")
+    name: str = Field(min_length=1, max_length=300)
+    role: str = Field(default="unknown", pattern="^(dimension|measure|unknown)$")
+
+
 class JobCreateRequest(BaseModel):
     question: str = Field(min_length=1, max_length=10000)
     dashboard: str | None = Field(default=None, max_length=300)
     dataset_name: str | None = Field(default=None, max_length=300)
     filters: dict[str, Any] = Field(default_factory=dict)
+    fields: list[BoundField] = Field(default_factory=list, max_length=200)
     rows: list[dict[str, Any]] = Field(default_factory=list)
     history: list[ChatMessage] = Field(default_factory=list)
 
@@ -23,6 +30,16 @@ class JobCreateRequest(BaseModel):
     @classmethod
     def limit_history(cls, value: list[ChatMessage]) -> list[ChatMessage]:
         return value[-10:]
+
+    @model_validator(mode="after")
+    def require_unique_fields(self) -> "JobCreateRequest":
+        sources = [field.source for field in self.fields]
+        names = [field.name for field in self.fields]
+        if len(sources) != len(set(sources)):
+            raise ValueError("fields 中的 source 必须唯一")
+        if len(names) != len(set(names)):
+            raise ValueError("fields 中的 name 必须唯一")
+        return self
 
 
 class JobAcceptedResponse(BaseModel):

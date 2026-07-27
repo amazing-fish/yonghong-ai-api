@@ -27,6 +27,7 @@ class PromptBuilder:
             "dashboard": request.dashboard,
             "dataset_name": request.dataset_name,
             "filters": request.filters,
+            "fields": [field.model_dump() for field in request.fields],
             "data_meta": data_meta,
             "rows": rows,
         }

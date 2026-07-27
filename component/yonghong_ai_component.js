@@ -25,29 +25,23 @@
     MAX_ROWS: 300,
     DEFAULT_MODE: "options_data",
     DEFAULT_DATASET: "event_summary",
-    FIELD_MAPPING: [
-      "event_date",
-      "event_id",
-      "os_name",
-      "sdk_pure_version",
-      "total_count",
-      "success_count",
-      "failure_count",
-      "failure_rate",
-      "avg_total_time"
-    ]
+    DEFAULT_FIELD_DEFINITIONS: []
   };
+  var SETTINGS_STORAGE_KEY = createSettingsStorageKey();
 
   var state = container.__yhAiState || {
     initialized: false,
     busy: false,
     boundRows: [],
+    boundFields: [],
     history: [],
     settings: loadSettings()
   };
   container.__yhAiState = state;
   var currentOptions = typeof options !== "undefined" && options ? options : {};
-  state.boundRows = mapOptionsData(currentOptions.data);
+  state.settings.fieldDefinitions = normalizeFieldDefinitions(state.settings.fieldDefinitions);
+  state.boundFields = detectBoundFields(currentOptions, state.settings.fieldDefinitions);
+  state.boundRows = mapOptionsData(currentOptions.data, state.boundFields);
 
   // 永洪在字段绑定或筛选刷新时可能清空容器 DOM，但保留挂载在
   // container 上的状态对象。此时 initialized 仍为 true，必须重新构建界面。
@@ -60,15 +54,84 @@
   state.initialized = true;
   refreshSummary();
 
-  function mapOptionsData(data) {
+  function mapOptionsData(data, fields) {
     var source = Array.isArray(data) ? data : [];
     return source.slice(0, CONFIG.MAX_ROWS).map(function (row) {
+      var item = isPlainObject(row) ? row : {};
       var result = {};
-      CONFIG.FIELD_MAPPING.forEach(function (field, index) {
-        result[field] = row["column" + (index + 1)];
+      fields.forEach(function (field) {
+        result[field.name] = item[field.source];
       });
       return result;
     });
+  }
+
+  function detectBoundFields(runtimeOptions, definitions) {
+    var runtime = isPlainObject(runtimeOptions) ? runtimeOptions : {};
+    var source = Array.isArray(runtime.data) ? runtime.data : [];
+    var keys = Object.create(null);
+
+    // options.data carries row values. Yonghong also exposes options.columnN
+    // arrays, which lets us retain bindings even when filtering returns zero rows.
+    Object.keys(runtime).forEach(function (key) {
+      if (/^column\d+$/.test(key)) keys[key] = true;
+    });
+    source.slice(0, CONFIG.MAX_ROWS).forEach(function (row) {
+      if (!isPlainObject(row)) return;
+      Object.keys(row).forEach(function (key) {
+        if (/^column\d+$/.test(key)) keys[key] = true;
+      });
+    });
+
+    var configured = Object.create(null);
+    definitions.forEach(function (field) {
+      configured[field.source] = field;
+    });
+
+    var usedNames = Object.create(null);
+    return Object.keys(keys).sort(compareColumnKeys).map(function (sourceName) {
+      var definition = configured[sourceName] || {};
+      var fieldName = makeUniqueFieldName(definition.name || sourceName, sourceName, usedNames);
+      usedNames[fieldName] = true;
+      return {
+        source: sourceName,
+        name: fieldName,
+        role: definition.role || "unknown"
+      };
+    });
+  }
+
+  function makeUniqueFieldName(preferredName, sourceName, usedNames) {
+    var preferred = String(preferredName || sourceName).trim() || sourceName;
+    var reserved = preferred === "__proto__" || preferred === "prototype" || preferred === "constructor";
+    if (!reserved && !usedNames[preferred]) return preferred;
+    if (!usedNames[sourceName]) return sourceName;
+
+    var suffix = 2;
+    while (usedNames[sourceName + "_" + suffix]) suffix += 1;
+    return sourceName + "_" + suffix;
+  }
+
+  function normalizeFieldDefinitions(value) {
+    var source = Array.isArray(value) ? value : [];
+    var usedSources = Object.create(null);
+    return source.map(function (item) {
+      var sourceName = item && String(item.source || "").trim();
+      if (!/^column\d+$/.test(sourceName) || usedSources[sourceName]) return null;
+      usedSources[sourceName] = true;
+      var role = item.role === "dimension" || item.role === "measure" ? item.role : "unknown";
+      return {
+        source: sourceName,
+        name: String(item.name || sourceName).trim() || sourceName,
+        role: role
+      };
+    }).filter(Boolean).sort(function (left, right) {
+      return compareColumnKeys(left.source, right.source);
+    });
+  }
+
+  function compareColumnKeys(left, right) {
+    return parseInt(left.replace("column", ""), 10) - parseInt(right.replace("column", ""), 10);
   }
 
   function render() {
@@ -103,11 +166,13 @@
       '<div style="display:grid;gap:8px;margin-top:10px">' +
       '<label>数据模式<select data-field="mode"><option value="options_data">options.data</option><option value="webapi">WebAPI</option></select></label>' +
       '<label>数据集名称<input data-field="dataset" type="text"></label>' +
+      '<label>字段映射 JSON（可选）<textarea data-field="fields" rows="8" placeholder="[{&quot;source&quot;:&quot;column1&quot;,&quot;name&quot;:&quot;event_date&quot;,&quot;role&quot;:&quot;dimension&quot;}]"></textarea></label>' +
+      '<div style="font-size:12px;color:#6b7680">未配置时保留 columnN。永洪自定义绘图的公开运行时数据不包含原字段名、维度/度量角色或计算公式。</div>' +
       '<label>WebAPI action<input data-field="action" type="text" placeholder="从永洪10.2帮助复制"></label>' +
       '<label>xmlData<textarea data-field="xmlData" rows="5" placeholder="从永洪10.2帮助复制，可使用 {{name}} 模板"></textarea></label>' +
       '<label>模板参数 JSON<textarea data-field="params" rows="3" placeholder="{&quot;name&quot;:&quot;value&quot;}"></textarea></label>' +
       '<label>JSON 行路径<input data-field="rowsPath" type="text" placeholder="例如 results.rows，可留空自动识别"></label>' +
-      '<div><button data-action="testData">测试取数</button> <button data-action="saveSettings">保存设置</button></div>' +
+      '<div><button data-action="testData">测试取数与字段</button> <button data-action="saveSettings">保存设置</button></div>' +
       '<pre data-field="debug" style="max-height:180px;overflow:auto;background:#f6f8fa;padding:8px"></pre>' +
       '</div>';
     container.appendChild(settings);
@@ -160,6 +225,7 @@
           dashboard: document.title || "永洪报表",
           dataset_name: state.settings.dataset,
           filters: state.settings.params || {},
+          fields: state.settings.mode === "options_data" ? state.boundFields : [],
           rows: rows,
           history: state.history.slice(-10)
         })
@@ -211,8 +277,12 @@
     try {
       saveSettingsFromForm();
       var rows = await acquireRows();
-      getField("debug").textContent = JSON.stringify(rows.slice(0, 20), null, 2);
-      setStatus("测试成功：" + rows.length + " 行");
+      getField("debug").textContent = JSON.stringify({
+        binding: state.settings.mode === "options_data" ? inspectRuntimeBinding() : null,
+        fields: state.settings.mode === "options_data" ? state.boundFields : [],
+        rows: rows.slice(0, 20)
+      }, null, 2);
+      setStatus("测试成功：" + rows.length + " 行，" + state.boundFields.length + " 个绑定字段");
     } catch (error) {
       getField("debug").textContent = error.stack || error.message;
       setStatus("取数失败");
@@ -239,29 +309,94 @@
     var paramsText = getField("params").value.trim();
     var params = {};
     if (paramsText) params = JSON.parse(paramsText);
+
+    var fieldsText = getField("fields").value.trim();
+    var fieldDefinitions = fieldsText ? JSON.parse(fieldsText) : [];
+    if (!Array.isArray(fieldDefinitions)) throw new Error("字段映射必须是 JSON 数组");
+
     state.settings = {
       mode: getField("mode").value,
       dataset: getField("dataset").value.trim() || CONFIG.DEFAULT_DATASET,
+      fieldDefinitions: normalizeFieldDefinitions(fieldDefinitions),
       action: getField("action").value.trim(),
       xmlData: getField("xmlData").value,
       params: params,
       rowsPath: getField("rowsPath").value.trim()
     };
-    try { localStorage.setItem("yh_ai_poc_settings_v2", JSON.stringify(state.settings)); } catch (_) {}
+    state.boundFields = detectBoundFields(currentOptions, state.settings.fieldDefinitions);
+    state.boundRows = mapOptionsData(currentOptions.data, state.boundFields);
+    try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(state.settings)); } catch (_) {}
     refreshSummary();
   }
 
-  function loadSettings() {
+  function createSettingsStorageKey() {
+    var dashboardScope = "";
     try {
-      var text = localStorage.getItem("yh_ai_poc_settings_v2");
-      if (text) return JSON.parse(text);
-    } catch (_) {}
-    return {mode: CONFIG.DEFAULT_MODE, dataset: CONFIG.DEFAULT_DATASET, action: "", xmlData: "", params: {}, rowsPath: ""};
+      var params = new URLSearchParams(window.location.search || "");
+      dashboardScope =
+        params.get("db") ||
+        params.get("dashboard") ||
+        (window.location.pathname || "") + (window.location.search || "");
+    } catch (_) {
+      dashboardScope = window.location.pathname || "unknown-dashboard";
+    }
+    return (
+      "yh_ai_poc_settings_v3:" +
+      encodeURIComponent(dashboardScope) +
+      ":" +
+      encodeURIComponent(String($container))
+    );
+  }
+
+  function loadSettings() {
+    var scoped = readStoredSettings(SETTINGS_STORAGE_KEY);
+    if (scoped) return normalizeStoredSettings(scoped, true);
+
+    // v2 used one origin-wide key. Migrate the reusable WebAPI settings once,
+    // but intentionally drop its field mapping because it is not component-safe.
+    var legacy = readStoredSettings("yh_ai_poc_settings_v2");
+    if (legacy) {
+      var migrated = normalizeStoredSettings(legacy, false);
+      try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(migrated)); } catch (_) {}
+      return migrated;
+    }
+
+    return normalizeStoredSettings({}, false);
+  }
+
+  function readStoredSettings(key) {
+    try {
+      var text = localStorage.getItem(key);
+      if (!text) return null;
+      var value = JSON.parse(text);
+      return isPlainObject(value) ? value : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function normalizeStoredSettings(value, keepFieldDefinitions) {
+    return {
+      mode: value.mode === "webapi" ? "webapi" : CONFIG.DEFAULT_MODE,
+      dataset: String(value.dataset || CONFIG.DEFAULT_DATASET),
+      fieldDefinitions: keepFieldDefinitions
+        ? normalizeFieldDefinitions(value.fieldDefinitions)
+        : [],
+      action: String(value.action || ""),
+      xmlData: String(value.xmlData || ""),
+      params: isPlainObject(value.params) ? value.params : {},
+      rowsPath: String(value.rowsPath || "")
+    };
   }
 
   function applySettingsToForm() {
     getField("mode").value = state.settings.mode || CONFIG.DEFAULT_MODE;
     getField("dataset").value = state.settings.dataset || CONFIG.DEFAULT_DATASET;
+    getField("fields").value = JSON.stringify(
+      state.settings.fieldDefinitions || [],
+      null,
+      2
+    );
     getField("action").value = state.settings.action || "";
     getField("xmlData").value = state.settings.xmlData || "";
     getField("params").value = JSON.stringify(state.settings.params || {}, null, 2);
@@ -270,7 +405,28 @@
 
   function refreshSummary() {
     var summary = container.querySelector('[data-field="summary"]');
-    if (summary) summary.textContent = (state.settings.mode === "webapi" ? "WebAPI" : "绑定数据") + " · " + state.boundRows.length + " 行";
+    if (summary) {
+      summary.textContent =
+        (state.settings.mode === "webapi" ? "WebAPI" : "绑定数据") +
+        " · " + state.boundRows.length + " 行" +
+        " · " + state.boundFields.length + " 字段";
+    }
+  }
+
+  function inspectRuntimeBinding() {
+    var optionKeys = Object.keys(currentOptions || {}).sort();
+    return {
+      optionsKeys: optionKeys,
+      metadataCandidateKeys: optionKeys.filter(function (key) {
+        return (
+          !/^column\d+$/.test(key) &&
+          /field|column|meta|label|name|dimension|measure/i.test(key)
+        );
+      }),
+      boundSources: state.boundFields.map(function (field) { return field.source; }),
+      configuredFieldCount: state.settings.fieldDefinitions.length,
+      note: "字段名、角色和计算公式不会从 options.data 自动推断；如 metadataCandidateKeys 非空，可把本段结果交给开发者继续适配。"
+    };
   }
 
   function renderTemplate(text, params) {
