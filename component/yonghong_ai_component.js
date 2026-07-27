@@ -25,16 +25,16 @@
     MAX_ROWS: 300,
     DEFAULT_MODE: "options_data",
     DEFAULT_DATASET: "event_summary",
-    FIELD_MAPPING: [
-      "event_date",
-      "event_id",
-      "os_name",
-      "sdk_pure_version",
-      "total_count",
-      "success_count",
-      "failure_count",
-      "failure_rate",
-      "avg_total_time"
+    DEFAULT_FIELD_DEFINITIONS: [
+      {source: "column1", name: "event_date", role: "dimension"},
+      {source: "column2", name: "event_id", role: "dimension"},
+      {source: "column3", name: "os_name", role: "dimension"},
+      {source: "column4", name: "sdk_pure_version", role: "dimension"},
+      {source: "column5", name: "total_count", role: "measure"},
+      {source: "column6", name: "success_count", role: "measure"},
+      {source: "column7", name: "failure_count", role: "measure"},
+      {source: "column8", name: "failure_rate", role: "measure"},
+      {source: "column9", name: "avg_total_time", role: "measure"}
     ]
   };
 
@@ -42,12 +42,15 @@
     initialized: false,
     busy: false,
     boundRows: [],
+    boundFields: [],
     history: [],
     settings: loadSettings()
   };
   container.__yhAiState = state;
   var currentOptions = typeof options !== "undefined" && options ? options : {};
-  state.boundRows = mapOptionsData(currentOptions.data);
+  state.settings.fieldDefinitions = normalizeFieldDefinitions(state.settings.fieldDefinitions);
+  state.boundFields = detectBoundFields(currentOptions.data, state.settings.fieldDefinitions);
+  state.boundRows = mapOptionsData(currentOptions.data, state.boundFields);
 
   // 永洪在字段绑定或筛选刷新时可能清空容器 DOM，但保留挂载在
   // container 上的状态对象。此时 initialized 仍为 true，必须重新构建界面。
@@ -60,15 +63,67 @@
   state.initialized = true;
   refreshSummary();
 
-  function mapOptionsData(data) {
+  function mapOptionsData(data, fields) {
     var source = Array.isArray(data) ? data : [];
     return source.slice(0, CONFIG.MAX_ROWS).map(function (row) {
+      var item = isPlainObject(row) ? row : {};
       var result = {};
-      CONFIG.FIELD_MAPPING.forEach(function (field, index) {
-        result[field] = row["column" + (index + 1)];
+      fields.forEach(function (field) {
+        result[field.name] = item[field.source];
       });
       return result;
     });
+  }
+
+  function detectBoundFields(data, definitions) {
+    var source = Array.isArray(data) ? data : [];
+    var keys = {};
+    source.slice(0, CONFIG.MAX_ROWS).forEach(function (row) {
+      if (!isPlainObject(row)) return;
+      Object.keys(row).forEach(function (key) {
+        if (/^column\d+$/.test(key)) keys[key] = true;
+      });
+    });
+
+    var configured = {};
+    definitions.forEach(function (field) {
+      configured[field.source] = field;
+    });
+
+    var usedNames = {};
+    return Object.keys(keys).sort(compareColumnKeys).map(function (sourceName) {
+      var definition = configured[sourceName] || {};
+      var fieldName = definition.name || sourceName;
+      if (usedNames[fieldName]) fieldName = sourceName;
+      usedNames[fieldName] = true;
+      return {
+        source: sourceName,
+        name: fieldName,
+        role: definition.role || "unknown"
+      };
+    });
+  }
+
+  function normalizeFieldDefinitions(value) {
+    var source = Array.isArray(value) ? value : CONFIG.DEFAULT_FIELD_DEFINITIONS;
+    var usedSources = {};
+    return source.map(function (item) {
+      var sourceName = item && String(item.source || "").trim();
+      if (!/^column\d+$/.test(sourceName) || usedSources[sourceName]) return null;
+      usedSources[sourceName] = true;
+      var role = item.role === "dimension" || item.role === "measure" ? item.role : "unknown";
+      return {
+        source: sourceName,
+        name: String(item.name || sourceName).trim() || sourceName,
+        role: role
+      };
+    }).filter(Boolean).sort(function (left, right) {
+      return compareColumnKeys(left.source, right.source);
+    });
+  }
+
+  function compareColumnKeys(left, right) {
+    return parseInt(left.replace("column", ""), 10) - parseInt(right.replace("column", ""), 10);
   }
 
   function render() {
@@ -103,6 +158,7 @@
       '<div style="display:grid;gap:8px;margin-top:10px">' +
       '<label>数据模式<select data-field="mode"><option value="options_data">options.data</option><option value="webapi">WebAPI</option></select></label>' +
       '<label>数据集名称<input data-field="dataset" type="text"></label>' +
+      '<label>字段映射 JSON<textarea data-field="fields" rows="8" placeholder="[{&quot;source&quot;:&quot;column1&quot;,&quot;name&quot;:&quot;event_date&quot;,&quot;role&quot;:&quot;dimension&quot;}]"></textarea></label>' +
       '<label>WebAPI action<input data-field="action" type="text" placeholder="从永洪10.2帮助复制"></label>' +
       '<label>xmlData<textarea data-field="xmlData" rows="5" placeholder="从永洪10.2帮助复制，可使用 {{name}} 模板"></textarea></label>' +
       '<label>模板参数 JSON<textarea data-field="params" rows="3" placeholder="{&quot;name&quot;:&quot;value&quot;}"></textarea></label>' +
@@ -160,6 +216,7 @@
           dashboard: document.title || "永洪报表",
           dataset_name: state.settings.dataset,
           filters: state.settings.params || {},
+          fields: state.settings.mode === "options_data" ? state.boundFields : [],
           rows: rows,
           history: state.history.slice(-10)
         })
@@ -211,8 +268,11 @@
     try {
       saveSettingsFromForm();
       var rows = await acquireRows();
-      getField("debug").textContent = JSON.stringify(rows.slice(0, 20), null, 2);
-      setStatus("测试成功：" + rows.length + " 行");
+      getField("debug").textContent = JSON.stringify({
+        fields: state.settings.mode === "options_data" ? state.boundFields : [],
+        rows: rows.slice(0, 20)
+      }, null, 2);
+      setStatus("测试成功：" + rows.length + " 行，" + state.boundFields.length + " 个绑定字段");
     } catch (error) {
       getField("debug").textContent = error.stack || error.message;
       setStatus("取数失败");
@@ -239,14 +299,22 @@
     var paramsText = getField("params").value.trim();
     var params = {};
     if (paramsText) params = JSON.parse(paramsText);
+
+    var fieldsText = getField("fields").value.trim();
+    var fieldDefinitions = fieldsText ? JSON.parse(fieldsText) : [];
+    if (!Array.isArray(fieldDefinitions)) throw new Error("字段映射必须是 JSON 数组");
+
     state.settings = {
       mode: getField("mode").value,
       dataset: getField("dataset").value.trim() || CONFIG.DEFAULT_DATASET,
+      fieldDefinitions: normalizeFieldDefinitions(fieldDefinitions),
       action: getField("action").value.trim(),
       xmlData: getField("xmlData").value,
       params: params,
       rowsPath: getField("rowsPath").value.trim()
     };
+    state.boundFields = detectBoundFields(currentOptions.data, state.settings.fieldDefinitions);
+    state.boundRows = mapOptionsData(currentOptions.data, state.boundFields);
     try { localStorage.setItem("yh_ai_poc_settings_v2", JSON.stringify(state.settings)); } catch (_) {}
     refreshSummary();
   }
@@ -254,14 +322,31 @@
   function loadSettings() {
     try {
       var text = localStorage.getItem("yh_ai_poc_settings_v2");
-      if (text) return JSON.parse(text);
+      if (text) {
+        var saved = JSON.parse(text);
+        saved.fieldDefinitions = normalizeFieldDefinitions(saved.fieldDefinitions);
+        return saved;
+      }
     } catch (_) {}
-    return {mode: CONFIG.DEFAULT_MODE, dataset: CONFIG.DEFAULT_DATASET, action: "", xmlData: "", params: {}, rowsPath: ""};
+    return {
+      mode: CONFIG.DEFAULT_MODE,
+      dataset: CONFIG.DEFAULT_DATASET,
+      fieldDefinitions: normalizeFieldDefinitions(CONFIG.DEFAULT_FIELD_DEFINITIONS),
+      action: "",
+      xmlData: "",
+      params: {},
+      rowsPath: ""
+    };
   }
 
   function applySettingsToForm() {
     getField("mode").value = state.settings.mode || CONFIG.DEFAULT_MODE;
     getField("dataset").value = state.settings.dataset || CONFIG.DEFAULT_DATASET;
+    getField("fields").value = JSON.stringify(
+      state.settings.fieldDefinitions || CONFIG.DEFAULT_FIELD_DEFINITIONS,
+      null,
+      2
+    );
     getField("action").value = state.settings.action || "";
     getField("xmlData").value = state.settings.xmlData || "";
     getField("params").value = JSON.stringify(state.settings.params || {}, null, 2);
@@ -270,7 +355,12 @@
 
   function refreshSummary() {
     var summary = container.querySelector('[data-field="summary"]');
-    if (summary) summary.textContent = (state.settings.mode === "webapi" ? "WebAPI" : "绑定数据") + " · " + state.boundRows.length + " 行";
+    if (summary) {
+      summary.textContent =
+        (state.settings.mode === "webapi" ? "WebAPI" : "绑定数据") +
+        " · " + state.boundRows.length + " 行" +
+        " · " + state.boundFields.length + " 字段";
+    }
   }
 
   function renderTemplate(text, params) {
