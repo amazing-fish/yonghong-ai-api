@@ -115,21 +115,30 @@ var container = document.getElementById($container);
 
 ### 模式 A：`options.data`
 
-组件默认按以下顺序映射绑定字段：
+组件会读取绑定给当前自定义绘图组件的所有 `columnN` 字段，并按数字顺序提交。默认提供前九列的语义映射：
 
 ```text
-column1  event_date
-column2  event_id
-column3  os_name
-column4  sdk_pure_version
-column5  total_count
-column6  success_count
-column7  failure_count
-column8  failure_rate
-column9  avg_total_time
+column1  event_date       dimension
+column2  event_id         dimension
+column3  os_name          dimension
+column4  sdk_pure_version dimension
+column5  total_count      measure
+column6  success_count    measure
+column7  failure_count    measure
+column8  failure_rate     measure
+column9  avg_total_time   measure
 ```
 
-该模式适合解释当前筛选后的图表数据，不需要配置永洪 WebAPI。
+额外绑定的字段不会被丢弃；未配置映射时会保留为 `column10`、`column11` 等名称，角色为 `unknown`。可以在组件的“字段映射 JSON”中配置业务名称和角色：
+
+```json
+[
+  {"source": "column1", "name": "event_date", "role": "dimension"},
+  {"source": "column2", "name": "usage_count", "role": "measure"}
+]
+```
+
+`options.data` 只包含明确绑定给当前组件的数据，不会自动读取整个数据集或看板中其他组件的字段。该模式适合解释当前筛选后的组件数据，不需要配置永洪 WebAPI。
 
 ### 模式 B：永洪 WebAPI
 
@@ -173,6 +182,10 @@ Content-Type: application/json
     "event_id": 10001,
     "os_name": "Android"
   },
+  "fields": [
+    {"source": "column1", "name": "event_date", "role": "dimension"},
+    {"source": "column2", "name": "failure_rate", "role": "measure"}
+  ],
   "rows": [
     {
       "event_date": "2026-01-01",
