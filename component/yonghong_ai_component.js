@@ -349,22 +349,43 @@
   }
 
   function loadSettings() {
+    var scoped = readStoredSettings(SETTINGS_STORAGE_KEY);
+    if (scoped) return normalizeStoredSettings(scoped, true);
+
+    // v2 used one origin-wide key. Migrate the reusable WebAPI settings once,
+    // but intentionally drop its field mapping because it is not component-safe.
+    var legacy = readStoredSettings("yh_ai_poc_settings_v2");
+    if (legacy) {
+      var migrated = normalizeStoredSettings(legacy, false);
+      try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(migrated)); } catch (_) {}
+      return migrated;
+    }
+
+    return normalizeStoredSettings({}, false);
+  }
+
+  function readStoredSettings(key) {
     try {
-      var text = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (text) {
-        var saved = JSON.parse(text);
-        saved.fieldDefinitions = normalizeFieldDefinitions(saved.fieldDefinitions);
-        return saved;
-      }
-    } catch (_) {}
+      var text = localStorage.getItem(key);
+      if (!text) return null;
+      var value = JSON.parse(text);
+      return isPlainObject(value) ? value : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function normalizeStoredSettings(value, keepFieldDefinitions) {
     return {
-      mode: CONFIG.DEFAULT_MODE,
-      dataset: CONFIG.DEFAULT_DATASET,
-      fieldDefinitions: [],
-      action: "",
-      xmlData: "",
-      params: {},
-      rowsPath: ""
+      mode: value.mode === "webapi" ? "webapi" : CONFIG.DEFAULT_MODE,
+      dataset: String(value.dataset || CONFIG.DEFAULT_DATASET),
+      fieldDefinitions: keepFieldDefinitions
+        ? normalizeFieldDefinitions(value.fieldDefinitions)
+        : [],
+      action: String(value.action || ""),
+      xmlData: String(value.xmlData || ""),
+      params: isPlainObject(value.params) ? value.params : {},
+      rowsPath: String(value.rowsPath || "")
     };
   }
 
