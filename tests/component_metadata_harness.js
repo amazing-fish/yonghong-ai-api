@@ -213,6 +213,7 @@ async function main() {
         secretKey: "OPAQUE_OBJECT_SECRET_KEY",
         secrets: "OPAQUE_SECRETS_BLOB",
         sessionId: "OPAQUE_SESSION_ID",
+        tlsKey: "OPAQUE_TLS_PRIVATE_KEY",
         tokens: "OPAQUE_TOKENS_BLOB",
         webhookUrl: "https://hooks.slack.com/services/T123/B456/OPAQUE_WEBHOOK_SECRET",
       },
@@ -222,6 +223,9 @@ async function main() {
         items: {
           type: "object",
           required: ["region"],
+          dependentRequired: {
+            credit_card: ["billing_address"],
+          },
           properties: {
             author: {type: "string"},
             privateKeyboard: {type: "string"},
@@ -517,11 +521,16 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secretKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secrets"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "sessionId"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "tlsKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "tokens"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "webhookUrl"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
+  assert.deepStrictEqual(
+    diagnostic.metadata.configMeta.jsonSchema.items.dependentRequired.credit_card,
+    ["billing_address"],
+  );
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.author, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.privateKeyboard, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
