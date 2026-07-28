@@ -625,6 +625,7 @@
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Token|Secret|Password|Passwd|Pwd|Passphrase|Credential|SessionId)$/.test(text) ||
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
+      /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
       hasSensitiveMetadataKeyAlias(text) ||
@@ -634,7 +635,7 @@
 
   function hasSensitiveMetadataKeyAlias(text) {
     return (
-      /(?:api|access|account|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?key(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
+      /(?:api|access|account|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
       /client[-_.]?(?:cert|key(?:[-_.]?data)?)$/i.test(text) ||
       /key[-_.]?store$/i.test(text) ||
       /webhook(?:[-_.]?(?:url|uri|endpoint))?$/i.test(text) ||
