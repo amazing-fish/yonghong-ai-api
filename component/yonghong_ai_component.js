@@ -615,6 +615,9 @@
     if (!consumeMetadataNode(budget)) return "[全局诊断预算已耗尽]";
     if (value === null || typeof value === "boolean" || typeof value === "number") return value;
     if (typeof value === "string") {
+      if (isSensitiveMetadataString(value)) {
+        return "[已省略可能包含凭证的字符串]";
+      }
       var remainingChars = Math.max(0, CONFIG.METADATA_MAX_TOTAL_CHARS - budget.chars);
       if (remainingChars === 0 && value.length > 0) {
         budget.truncated = true;
@@ -686,6 +689,15 @@
     } finally {
       seen.pop();
     }
+  }
+
+  function isSensitiveMetadataString(value) {
+    var sample = value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS);
+    return (
+      /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|client[-_]?secret|secret)\b\s*[:=]/i.test(sample) ||
+      /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]{8,}/i.test(sample) ||
+      /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
+    );
   }
 
   function isSensitiveNameValueTuple(value) {
