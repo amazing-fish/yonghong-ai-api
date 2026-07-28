@@ -600,7 +600,7 @@
   }
 
   function looksLikeMetadataKey(key) {
-    return /field|column|meta|label|name|alias|dimension|measure|metric|aggregate|formula|expression|calc|query|qinfo|header|schema|binding|bind/i.test(String(key));
+    return /field|column|meta|label|name|alias|dimension|measure|metric|aggregate|formula|expression|calc|query|qinfo|header|schema|binding|bind|role|type|definition|function|choice|enum|categor/i.test(String(key));
   }
 
   function isTopLevelRowDataKey(key) {
@@ -750,6 +750,7 @@
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@]+@/i.test(normalizedUrlSample) ||
       /(?:^|[\s;,])[^:\s@\/]+:[^@\s\/]+@(?:tcp|unix)\([^)\s]*\)(?:\/|$)/i.test(inspectionSample) ||
+      /(?:^|[\s;,])(?:jdbc:oracle:thin:)?[^\/\s@:]+\/[^@\s\/]+@(?:\[[^\]]+\]|[a-z0-9_.-]+)(?::\d+)?(?:\/[^\s]*)?/i.test(inspectionSample) ||
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@?#]{32,}$/i.test(normalizedUrlSample)
