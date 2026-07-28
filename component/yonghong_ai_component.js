@@ -538,7 +538,7 @@
           break;
         }
         if (!Object.prototype.hasOwnProperty.call(runtime, key)) continue;
-        if (isSensitiveMetadataKey(key)) continue;
+        if (isSensitiveMetadataKey(key) || isSensitiveMetadataString(String(key))) continue;
 
         if (optionKeys.length < CONFIG.METADATA_MAX_OPTION_KEYS) {
           optionKeys.push(key);
@@ -915,16 +915,17 @@
         return true;
       }
     }
-    var elementLabelPattern = /<\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>\s*([^<]+?)\s*<\s*\/\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>/gi;
+    var elementLabelPattern = /<\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([^<]+?))\s*<\s*\/\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>/gi;
     var elementLabelMatch;
     var hasSensitiveElementLabel = false;
     while ((elementLabelMatch = elementLabelPattern.exec(sample)) !== null) {
-      if (isSensitiveMetadataKey(elementLabelMatch[1].trim())) {
+      var elementLabel = elementLabelMatch[1] !== undefined ? elementLabelMatch[1] : elementLabelMatch[2];
+      if (isSensitiveMetadataKey(elementLabel.trim())) {
         hasSensitiveElementLabel = true;
         break;
       }
     }
-    var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\s*>\s*[^<]+/i.test(sample);
+    var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\b[^>]*>/i.test(sample);
     if (hasSensitiveElementLabel && hasElementValue) return true;
     if (
       truncated &&
@@ -1202,7 +1203,7 @@
           break;
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        if (isSensitiveMetadataKey(key)) continue;
+        if (isSensitiveMetadataKey(key) || isSensitiveMetadataString(String(key))) continue;
         if (keys.length >= CONFIG.METADATA_MAX_OBJECT_KEYS) {
           truncated = true;
           break;
@@ -1244,6 +1245,7 @@
 
   function truncateMetadataKey(key) {
     var text = String(key);
+    if (isSensitiveMetadataString(text)) return "[已省略可能包含凭证的键]";
     return text.length > CONFIG.METADATA_MAX_KEY_CHARS
       ? text.slice(0, CONFIG.METADATA_MAX_KEY_CHARS) + "...[键已截断]"
       : text;
