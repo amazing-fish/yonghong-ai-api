@@ -194,7 +194,10 @@ async function main() {
       connectionSettings: "{\"user\":\"demo\",\"pass\":\"OPAQUE_SERIALIZED_PASS_VALUE\"}",
       cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
-      mailSettings: {smtpPass: "OPAQUE_CAMEL_SMTP_PASS"},
+      mailSettings: {
+        smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
+        DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
+      },
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       jsonSchema: {
         type: "array",
@@ -477,6 +480,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
