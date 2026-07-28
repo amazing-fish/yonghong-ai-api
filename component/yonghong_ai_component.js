@@ -633,6 +633,7 @@
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^(?:set[-_.]?)?cookies?[-_.]?headers?$/i.test(text) ||
       /^x[-_.]?(?:amz|goog)[-_.]?signature$/i.test(text) ||
+      /^(?:[A-Za-z][A-Za-z0-9]{0,120})?signatures?$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
       /^(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)$/i.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
@@ -643,14 +644,14 @@
 
   function hasSensitiveMetadataKeyAlias(text) {
     return (
-      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
-      /(?:tls|ssl)[-_.]?key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
-      /client[-_.]?(?:cert|key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?)$/i.test(text) ||
-      /key[-_.]?store$/i.test(text) ||
-      /webhook(?:[-_.]?(?:url|uri|endpoint))?$/i.test(text) ||
-      /shared[-_.]?access(?:[-_.]?signature)?$/i.test(text) ||
-      /sas[-_.]?token$/i.test(text) ||
-      /(?:pfx|p12|pkcs[-_.]?(?:12|#12))$/i.test(text)
+      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.\s]?keys?(?:[-_.\s]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
+      /(?:tls|ssl)[-_.\s]?key(?:[-_.\s]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
+      /client[-_.\s]?(?:cert|key(?:[-_.\s]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?)$/i.test(text) ||
+      /key[-_.\s]?store$/i.test(text) ||
+      /webhook(?:[-_.\s]?(?:url|uri|endpoint))?$/i.test(text) ||
+      /shared[-_.\s]?access(?:[-_.\s]?signature)?$/i.test(text) ||
+      /sas[-_.\s]?token$/i.test(text) ||
+      /(?:pfx|p12|pkcs[-_.\s]?(?:12|#12))$/i.test(text)
     );
   }
 
@@ -1111,26 +1112,28 @@
     return null;
   }
 
+  function isJsonSchemaArrayOfSchemas(value) {
+    if (!Array.isArray(value)) return false;
+    var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
+    var hasSchema = false;
+    for (var index = 0; index < visibleLength; index += 1) {
+      if (value[index] === null || typeof value[index] === "undefined") continue;
+      if (typeof value[index] !== "boolean" && !isPlainObject(value[index])) return false;
+      hasSchema = true;
+    }
+    return hasSchema;
+  }
+
   function isJsonSchemaStructureProperty(parent, key, value) {
     var text = String(key);
     if (/^required$/i.test(text) && isNonEmptyStringArray(value)) {
       return isJsonSchemaShapedObject(parent);
     }
-    if (/^(?:oneof|anyof|allof|prefixitems)$/i.test(text) && Array.isArray(value)) {
-      var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
-      var hasSchema = false;
-      for (var index = 0; index < visibleLength; index += 1) {
-        if (value[index] === null || typeof value[index] === "undefined") continue;
-        if (typeof value[index] === "boolean") {
-          hasSchema = true;
-          continue;
-        }
-        if (!isPlainObject(value[index])) return false;
-        hasSchema = true;
-      }
-      return hasSchema;
-    }
-    if (!/^items$/i.test(text) || !isPlainObject(value)) return false;
+    if (/^(?:oneof|anyof|allof|prefixitems)$/i.test(text)) return isJsonSchemaArrayOfSchemas(value);
+    if (
+      !/^items$/i.test(text) ||
+      (!isPlainObject(value) && typeof value !== "boolean" && !isJsonSchemaArrayOfSchemas(value))
+    ) return false;
     try {
       if (typeof parent.type === "string") {
         return parent.type.toLowerCase() === "array";
