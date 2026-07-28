@@ -607,8 +607,13 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
+    if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
     return /(?:data|datasets?|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
+  }
+
+  function isStructuralMetadataCollectionKey(key) {
+    return /^(?:fields?|columns?|headers?|schemas?|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)(?:list|items|collections?)$/i.test(String(key));
   }
 
   function isSensitiveMetadataKey(key) {
@@ -738,6 +743,7 @@
       isSerializedSensitiveDescriptor(inspectionSample, value.length > sample.length) ||
       isSensitiveMetadataAssignment(inspectionSample) ||
       isSensitiveMetadataAssignment(normalizedUrlSample) ||
+      isSensitiveWhitespaceMetadataAssignment(inspectionSample) ||
       isSensitiveMetadataXml(inspectionSample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(inspectionSample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
@@ -771,6 +777,10 @@
 
   function isSensitiveMetadataAssignment(sample) {
     return /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
+  }
+
+  function isSensitiveWhitespaceMetadataAssignment(sample) {
+    return /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+[^\s"'`;]{4,}/i.test(sample);
   }
 
   function isSensitiveMetadataXml(sample) {
