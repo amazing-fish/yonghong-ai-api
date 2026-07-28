@@ -183,8 +183,10 @@ async function main() {
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
+      nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
+      unicodeEscapedSettings: "{\\u0022password\\u0022\\u003a\\u0022OPAQUE_UNICODE_ESCAPED_PASSWORD\\u0022}",
     },
     cryptoMeta: {
       backupJwk: {
@@ -246,7 +248,9 @@ async function main() {
       phpHeaderText: "PHPSESSID=OPAQUE_PHP_SESSION_ID",
       aspHeaderText: "ASP.NET_SessionId=OPAQUE_ASP_SESSION_ID",
       connectHeaderText: "connect.sid=OPAQUE_CONNECT_SESSION_ID",
+      compactText: "eyJhbGciOiJIUzI1NiJ9.e30.OPAQUE_SHORT_JWT_SIGNATURE",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
+      repositoryEndpoint: "https://ghp_OPAQUE_TOKEN_ONLY_USERINFO@github.com/org/repo.git",
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serializedDescriptor: "{\"name\":\"password\",\"value\":\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
@@ -401,8 +405,10 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serviceSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.unicodeEscapedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
@@ -435,7 +441,9 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.phpHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.aspHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.connectHeaderText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.compactText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.repositoryEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptorsText, /已省略可能包含凭证的字符串/);
@@ -613,6 +621,8 @@ async function main() {
     "OPAQUE_CONNECT_SESSION_ID",
     "OPAQUE_NPM_AUTH_VALUE",
     "OPAQUE_DOCKER_AUTH_VALUE",
+    "OPAQUE_NESTED_JSON_PASSWORD",
+    "OPAQUE_UNICODE_ESCAPED_PASSWORD",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
@@ -627,6 +637,8 @@ async function main() {
     "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
     "OPAQUE_CAMEL_KUBECONFIG_CLIENT_KEY_DATA",
     "OPAQUE_SERIALIZED_KUBECONFIG_CLIENT_KEY_DATA",
+    "OPAQUE_SHORT_JWT_SIGNATURE",
+    "OPAQUE_TOKEN_ONLY_USERINFO",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
