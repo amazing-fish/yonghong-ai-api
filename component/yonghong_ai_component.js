@@ -595,7 +595,7 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     if (/metadata$/i.test(text)) return false;
-    return /(?:data|rows?|records?|values?|samples?|examples?|results?|payload|content)$/i.test(text);
+    return /(?:data|rows?|records?|values?|samples?|examples?|results?|items?|list|payload|content)$/i.test(text);
   }
 
   function isSensitiveMetadataKey(key) {
@@ -615,27 +615,12 @@
     if (!consumeMetadataNode(budget)) return "[全局诊断预算已耗尽]";
     if (value === null || typeof value === "boolean" || typeof value === "number") return value;
     if (typeof value === "string") {
-      if (isSensitiveMetadataString(value)) {
-        return "[已省略可能包含凭证的字符串]";
-      }
-      var remainingChars = Math.max(0, CONFIG.METADATA_MAX_TOTAL_CHARS - budget.chars);
-      if (remainingChars === 0 && value.length > 0) {
-        budget.truncated = true;
-        budget.exhausted = true;
-        return "[全局诊断预算已耗尽]";
-      }
-      var maxChars = Math.min(CONFIG.METADATA_MAX_STRING_CHARS, remainingChars);
-      var text = value.slice(0, maxChars);
-      consumeMetadataChars(budget, text.length);
-      if (value.length > text.length) {
-        budget.truncated = true;
-        return text + "...[已截断]";
-      }
-      return text;
+      return summarizeMetadataString(value, budget);
     }
     if (typeof value === "undefined") return "[已省略 undefined]";
     if (typeof value === "function") return "[已省略函数]";
-    if (typeof value === "symbol" || typeof value === "bigint") return String(value);
+    if (typeof value === "symbol") return summarizeMetadataString("[已省略 Symbol]", budget);
+    if (typeof value === "bigint") return summarizeMetadataString("[已省略 BigInt]", budget);
     if (isDomLike(value)) return "[已省略 DOM 对象]";
     if (seen.indexOf(value) >= 0) return "[循环引用]";
     if (Array.isArray(value) && isSensitiveNameValueTuple(value)) {
@@ -691,10 +676,30 @@
     }
   }
 
+  function summarizeMetadataString(value, budget) {
+    if (isSensitiveMetadataString(value)) {
+      return "[已省略可能包含凭证的字符串]";
+    }
+    var remainingChars = Math.max(0, CONFIG.METADATA_MAX_TOTAL_CHARS - budget.chars);
+    if (remainingChars === 0 && value.length > 0) {
+      budget.truncated = true;
+      budget.exhausted = true;
+      return "[全局诊断预算已耗尽]";
+    }
+    var maxChars = Math.min(CONFIG.METADATA_MAX_STRING_CHARS, remainingChars);
+    var text = value.slice(0, maxChars);
+    consumeMetadataChars(budget, text.length);
+    if (value.length > text.length) {
+      budget.truncated = true;
+      return text + "...[已截断]";
+    }
+    return text;
+  }
+
   function isSensitiveMetadataString(value) {
     var sample = value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS);
     return (
-      /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|client[-_]?secret|secret)\b\s*[:=]/i.test(sample) ||
+      /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|pwd|passphrase|client[-_]?secret|secret)\b\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]{8,}/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\b/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
@@ -712,7 +717,7 @@
 
   function isSensitiveNamedValueDescriptor(value) {
     var nameKeys = ["name", "key", "header", "label"];
-    var valueKeys = ["value", "values", "data", "content", "text", "defaultValue", "currentValue", "rawValue"];
+    var valueKeys = ["value", "values", "val", "data", "content", "text", "defaultValue", "currentValue", "rawValue"];
     var hasSensitiveName = false;
     var hasAssociatedValue = valueKeys.some(function (key) {
       return Object.prototype.hasOwnProperty.call(value, key);
