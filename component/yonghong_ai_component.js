@@ -632,6 +632,9 @@
     if (typeof value === "symbol" || typeof value === "bigint") return String(value);
     if (isDomLike(value)) return "[已省略 DOM 对象]";
     if (seen.indexOf(value) >= 0) return "[循环引用]";
+    if (Array.isArray(value) && isSensitiveNameValueTuple(value)) {
+      return "[已省略敏感名称/值元组]";
+    }
     if (depth >= CONFIG.METADATA_MAX_DEPTH) {
       return Array.isArray(value) ? "[数组层级已截断]" : "[对象层级已截断]";
     }
@@ -679,6 +682,15 @@
       return result;
     } finally {
       seen.pop();
+    }
+  }
+
+  function isSensitiveNameValueTuple(value) {
+    if (value.length !== 2) return false;
+    try {
+      return isSensitiveMetadataKey(value[0]);
+    } catch (_) {
+      return true;
     }
   }
 
