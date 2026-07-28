@@ -755,6 +755,7 @@
       isSerializedPrivateJwk(inspectionSample, value.length > sample.length) ||
       isSerializedSensitiveTuple(inspectionSample) ||
       isSerializedSensitiveDescriptor(inspectionSample, value.length > sample.length) ||
+      isSerializedSensitiveYamlDescriptor(inspectionSample, value.length > sample.length) ||
       isSensitiveMetadataAssignment(inspectionSample) ||
       isSensitiveMetadataAssignment(normalizedUrlSample) ||
       isSensitiveWhitespaceMetadataAssignment(inspectionSample) ||
@@ -811,8 +812,18 @@
   function isSensitiveWhitespaceMetadataAssignment(sample) {
     return (
       /(?:^|\s)(?:-u|-U|--user|--proxy-user)\s+(?:["'][^"'\r\n]*:[^"'\r\n]+["']|[^\s"'`:]+:[^\s"'`;]+)/.test(sample) ||
+      hasSensitiveWhitespaceMetadataOption(sample) ||
       /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+(?:["'][^\r\n]{1,}|[^\s"'`;]{4,})/i.test(sample)
     );
+  }
+
+  function hasSensitiveWhitespaceMetadataOption(sample) {
+    var optionPattern = /(?:^|[\s"'`;])--?([a-z][a-z0-9_-]{0,80})\s+(?:["'][^\r\n]{1,}|[^\s"'`;]{4,})/gi;
+    var optionMatch;
+    while ((optionMatch = optionPattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(optionMatch[1])) return true;
+    }
+    return false;
   }
 
   function isSensitiveMetadataXml(sample, truncated) {
@@ -855,6 +866,24 @@
       }
     }
     var hasAssociatedValue = /["'](?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']\s*:/i.test(sample);
+    if (hasSensitiveLabel && hasAssociatedValue) return true;
+    return truncated && (hasSensitiveLabel || hasAssociatedValue);
+  }
+
+  function isSerializedSensitiveYamlDescriptor(sample, truncated) {
+    if (!/(?:^|[\r\n])\s*(?:-\s*)?(?:name|key|header|header[-_.]?name|label)\s*:/i.test(sample)) {
+      return false;
+    }
+    var labelPattern = /(?:^|[\r\n])\s*(?:-\s*)?(?:name|key|header|header[-_.]?name|label)\s*:\s*["']?([^"'\r\n#]+)["']?/gi;
+    var labelMatch;
+    var hasSensitiveLabel = false;
+    while ((labelMatch = labelPattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(labelMatch[1].trim())) {
+        hasSensitiveLabel = true;
+        break;
+      }
+    }
+    var hasAssociatedValue = /(?:^|[\r\n])\s*(?:-\s*)?(?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*:\s*\S+/i.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
