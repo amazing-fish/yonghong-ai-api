@@ -230,6 +230,7 @@ async function main() {
         kty: "oct",
         k: "OPAQUE_SYMMETRIC_JWK_KEY",
       },
+      binaryView: new Uint8Array(Buffer.from("OPAQUE_BINARY_VIEW_SECRET")),
       clusterConfig: {
         server: "https://cluster.example.com",
         "client-key-data": "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
@@ -287,6 +288,7 @@ async function main() {
       connectHeaderText: "connect.sid=OPAQUE_CONNECT_SESSION_ID",
       compactText: "eyJhbGciOiJIUzI1NiJ9.e30.OPAQUE_SHORT_JWT_SIGNATURE",
       longColonlessUserinfo: `https://${"t".repeat(600)}OPAQUE_LONG_TOKEN_ONLY_USERINFO@example.com/path`,
+      longSchemeLessDsn: `demo:${"p".repeat(600)}OPAQUE_LONG_DSN_PASSWORD@tcp(db:3306)/app`,
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       repositoryEndpoint: "https://ghp_OPAQUE_TOKEN_ONLY_USERINFO@github.com/org/repo.git",
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
@@ -476,6 +478,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.subclassedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.unicodeEscapedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
+  assert.match(diagnostic.metadata.cryptoMeta.binaryView, /已省略二进制视图/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "clientKeyData"));
@@ -509,6 +512,7 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.connectHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.compactText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longColonlessUserinfo, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.longSchemeLessDsn, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.repositoryEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
@@ -717,6 +721,8 @@ async function main() {
     "SECRET_ROW_METADATA_BY_ID_VALUE",
     "OPAQUE_CAMEL_SMTP_PASS",
     "OPAQUE_SERIALIZED_SMTP_PASS",
+    "OPAQUE_BINARY_VIEW_SECRET",
+    "OPAQUE_LONG_DSN_PASSWORD",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
