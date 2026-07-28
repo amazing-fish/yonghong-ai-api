@@ -83,6 +83,10 @@ async function main() {
         formula: "failure_count / total_count",
         accessToken: "SECRET_FIELD_TOKEN",
       },
+      {
+        name: "jwt",
+        value: "SECRET_DESCRIPTOR_JWT",
+      },
     ],
     rows: [{name: "SECRET_NESTED_ROW"}],
     longLabel: "x".repeat(600),
@@ -130,6 +134,8 @@ async function main() {
         "Cookie: YHBISESSIONID=SECRET_RAW_ARRAY_COOKIE",
         "Content-Type: application/json",
       ],
+      jwt: "SECRET_JWT_KEY",
+      note: "eyJhbGciOiJIUzI1NiJ9.eyJzZWNyZXQiOiJTRUNSRVRfUkFXX0pXVCJ9.signature123",
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
       queryData: [{name: "SECRET_NESTED_QUERY_ROW"}],
@@ -172,6 +178,7 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.choices[5], /其余 1 项已省略/);
   assert.match(diagnostic.metadata.fieldMeta.longLabel, /已截断/);
   assert.match(diagnostic.metadata.fieldMeta.rows, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.fieldMeta.fields[1], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.queryData, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.metadataRows, /已省略潜在行数据/);
@@ -182,6 +189,8 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.headers[4], /已省略敏感名称\/值元组/);
   assert.match(diagnostic.metadata.qinfo.headerLines[0], /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.headerLines[1], /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.note, /已省略可能包含凭证的字符串/);
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "jwt"));
   assert.match(diagnostic.metadata.headers, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
@@ -213,9 +222,35 @@ async function main() {
     "SECRET_RAW_ARRAY_AUTH",
     "SECRET_RAW_ARRAY_COOKIE",
     "SECRET_RAW_HEADER",
+    "SECRET_DESCRIPTOR_JWT",
+    "SECRET_JWT_KEY",
+    "SECRET_RAW_JWT",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
+
+  Object.keys(runtimeOptions).forEach((key) => {
+    delete runtimeOptions[key];
+  });
+  runtimeOptions.data = [];
+  for (let index = 0; index < 60; index += 1) {
+    runtimeOptions[`option_${String(index).padStart(3, "0")}_${"x".repeat(130)}`] = {};
+  }
+  for (let index = 0; index < 20; index += 1) {
+    runtimeOptions[`field_${String(index).padStart(3, "0")}_${"m".repeat(130)}_meta`] = {};
+    runtimeOptions[`field_${String(index).padStart(3, "0")}_${"d".repeat(130)}_data`] = [];
+  }
+  global.options = runtimeOptions;
+  container.__yhAiState.boundFields = Array.from({length: 100}, (_, index) => {
+    const source = `column${String(index).padStart(3, "0")}${"9".repeat(130)}`;
+    return {source, name: source, role: "unknown"};
+  });
+  await elements['[data-action="copyMetadata"]'].onclick();
+
+  const minimalDiagnostic = JSON.parse(clipboardText);
+  assert.ok(clipboardText.length <= 32000);
+  assert.match(minimalDiagnostic.metadata.__truncated, /最终 JSON 限制/);
+  assert.ok(!Object.prototype.hasOwnProperty.call(minimalDiagnostic, "optionsKeys"));
 
   global.navigator.clipboard.writeText = async function () {
     throw new Error("clipboard denied");
