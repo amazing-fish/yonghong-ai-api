@@ -197,7 +197,7 @@ async function main() {
       commandSettings: "oauth2-proxy --client-secret OPAQUE_CLIENT_SECRET",
       connectionDsn: "demo:OPAQUE_SCHEMELESS_DSN_PASSWORD@tcp(db:3306)/app",
       connectionSettings: "{\"user\":\"demo\",\"pass\":\"OPAQUE_SERIALIZED_PASS_VALUE\"}",
-      cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
+      cryptographySettings: "{\"consumerKey\":\"OPAQUE_CONSUMER_KEY_VALUE\",\"tlsKey\":\"OPAQUE_TLS_KEY_VALUE\",\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       mailSettings: {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
