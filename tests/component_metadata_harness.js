@@ -104,6 +104,7 @@ async function main() {
   const fieldMeta = {
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
+    memberCache: {member_3: {caption: "SECRET_MEMBER_CACHE"}},
     memberMap: {member_2: {caption: "SECRET_MEMBER_MAP"}},
     sessionCookie: "SID=OPAQUE_SESSION_COOKIE_VALUE",
     fields: [
@@ -373,7 +374,7 @@ async function main() {
         {name: "Authorization", value: "SECRET_DESCRIPTOR_AUTH"},
         {key: "sessionToken", value: "SECRET_DESCRIPTOR_TOKEN"},
         ["Authorization", "SECRET_TUPLE_AUTH"],
-        ["sessionToken", "SECRET_TUPLE_TOKEN"],
+        ["name", "sessionToken", "value", "SECRET_TUPLE_TOKEN"],
       ],
       headerLines: [
         "Authorization: Bearer SECRET_RAW_ARRAY_AUTH",
@@ -649,6 +650,7 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembersById, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.fieldMeta.memberCache, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.memberMap, /已省略潜在行数据/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.fieldMeta, "sessionCookie"));
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
