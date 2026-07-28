@@ -170,6 +170,7 @@ async function main() {
   runtimeOptions[collisionKeyA] = {expression: "FIRST_COLLISION_FORMULA"};
   runtimeOptions[collisionKeyB] = {expression: "SECOND_COLLISION_FORMULA"};
   runtimeOptions.aggregateFunctions = ["SUM", "AVG"];
+  runtimeOptions.aggregations = [{name: "SUM"}];
   runtimeOptions.fieldList = [
     {name: "region", role: "dimension"},
     {name: "revenue", role: "measure"},
@@ -199,6 +200,7 @@ async function main() {
         type: "array",
         items: {
           type: "object",
+          required: ["region"],
           properties: {
             region: {type: "string"},
             revenue: {type: "number"},
@@ -258,6 +260,7 @@ async function main() {
         "current-value": "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
       },
       mapsEndpoint: "https://maps.googleapis.com/maps/api/geocode/json?key=OPAQUE_MAPS_API_KEY",
+      itemsById: {item_1: {customer: "SECRET_ITEMS_BY_ID_VALUE"}},
       queryResultMap: {row_2: {customer: "SECRET_QUERY_RESULT_MAP_VALUE"}},
       queryResultsByUuid: {row_1: {customer: "SECRET_QUERY_RESULTS_BY_UUID_VALUE"}},
       rowsByUuid: {row_1: {customer: "SECRET_ROWS_BY_UUID_VALUE"}},
@@ -424,6 +427,7 @@ async function main() {
     diagnostic.metadataCandidateKeys,
     [
       "aggregateFunctions",
+      "aggregations",
       "configMeta",
       "cryptoMeta",
       "dateMeta",
@@ -464,6 +468,7 @@ async function main() {
   assert.ok(diagnostic.boundSources[1].length < 200);
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
+  assert.deepStrictEqual(diagnostic.metadata.aggregations, [{name: "SUM"}]);
   assert.deepStrictEqual(diagnostic.metadata.roles, ["dimension", "measure"]);
   assert.match(diagnostic.metadata.configMeta.boxedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.commandSettings, /已省略可能包含凭证的字符串/);
@@ -474,6 +479,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
+  assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.revenue, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
@@ -513,6 +519,7 @@ async function main() {
   assert.match(diagnostic.metadata.cryptoMeta.curlProxyCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.curlProxyShortCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.mapsEndpoint, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.cryptoMeta.itemsById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryResultMap, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryResultsByUuid, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.rowsByUuid, /已省略潜在行数据/);
