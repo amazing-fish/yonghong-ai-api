@@ -607,6 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:(?:dimension|hierarchy|level))?members?(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
+    if (/^(?:dimension|hierarchy|level)values?(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
     if (/^(?:query(?:data|rows?|records?|results?|resultsets?|responses?|outputs?)?|data|rows?|records?|results?|resultsets?|responses?|outputs?)(?:cache|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
@@ -631,6 +632,7 @@
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^(?:set[-_.]?)?cookies?[-_.]?headers?$/i.test(text) ||
+      /^x[-_.]?(?:amz|goog)[-_.]?signature$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
       /^(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)$/i.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
@@ -1094,7 +1096,7 @@
     if (!isPlainObject(value) || !isJsonSchemaShapedObject(parent)) return null;
     if (/^dependentrequired$/i.test(String(key))) return "dependentRequired";
     if (/^properties$/i.test(String(key))) return "properties";
-    if (/^(?:\$defs|definitions)$/i.test(String(key))) return "definitions";
+    if (/^(?:\$defs|definitions|patternproperties)$/i.test(String(key))) return "definitions";
     return null;
   }
 
