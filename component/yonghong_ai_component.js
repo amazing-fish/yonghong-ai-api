@@ -459,6 +459,7 @@
     var runtime = isPlainObject(currentOptions) ? currentOptions : {};
     var keySets = collectRuntimeOptionKeySets();
     var candidateKeys = keySets.candidateKeys;
+    var candidateOutputKeys = makeUniqueMetadataOutputKeys(candidateKeys);
     var metadata = Object.create(null);
     var budget = {
       nodes: 0,
@@ -467,21 +468,21 @@
       exhausted: false
     };
 
-    candidateKeys.forEach(function (key) {
+    candidateKeys.forEach(function (key, index) {
       if (budget.exhausted) return;
+      var outputKey = candidateOutputKeys[index];
       try {
-        var outputKey = truncateMetadataKey(key);
         if (!consumeMetadataChars(budget, outputKey.length)) return;
         metadata[outputKey] = summarizeMetadataValue(runtime[key], 0, [], budget);
       } catch (_) {
-        metadata[truncateMetadataKey(key)] = "[读取失败]";
+        metadata[outputKey] = "[读取失败]";
       }
     });
 
     return {
       schemaVersion: 1,
       optionsKeys: keySets.optionKeys.map(truncateMetadataKey),
-      metadataCandidateKeys: candidateKeys.map(truncateMetadataKey),
+      metadataCandidateKeys: candidateOutputKeys,
       omittedRowCandidateKeys: keySets.omittedRowCandidateKeys.map(truncateMetadataKey),
       optionKeyScan: keySets.scan,
       boundSources: state.boundFields.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(function (field) {
@@ -640,7 +641,15 @@
       return Array.isArray(value) ? "[数组层级已截断]" : "[对象层级已截断]";
     }
     if (Object.prototype.toString.call(value) === "[object Date]") {
-      try { return value.toISOString(); } catch (_) { return String(value); }
+      try {
+        return summarizeMetadataString(String(value.toISOString()), budget);
+      } catch (_) {
+        try {
+          return summarizeMetadataString(String(value), budget);
+        } catch (_) {
+          return "[Date 读取失败]";
+        }
+      }
     }
     if (!Array.isArray(value) && isSensitiveNamedValueDescriptor(value)) {
       return "[已省略敏感名称/值描述符]";
@@ -660,9 +669,10 @@
 
       var result = Object.create(null);
       var keySample = collectBoundedMetadataObjectKeys(value);
-      keySample.keys.forEach(function (key) {
+      var outputKeys = makeUniqueMetadataOutputKeys(keySample.keys);
+      keySample.keys.forEach(function (key, index) {
         if (budget.exhausted) return;
-        var outputKey = truncateMetadataKey(key);
+        var outputKey = outputKeys[index];
         if (!consumeMetadataChars(budget, outputKey.length)) return;
         try {
           var childValue = value[key];
@@ -835,6 +845,21 @@
     return text.length > CONFIG.METADATA_MAX_KEY_CHARS
       ? text.slice(0, CONFIG.METADATA_MAX_KEY_CHARS) + "...[键已截断]"
       : text;
+  }
+
+  function makeUniqueMetadataOutputKeys(keys) {
+    var used = Object.create(null);
+    return keys.map(function (key) {
+      var base = truncateMetadataKey(key);
+      var outputKey = base;
+      var suffix = 2;
+      while (Object.prototype.hasOwnProperty.call(used, outputKey)) {
+        outputKey = base + "#" + suffix;
+        suffix += 1;
+      }
+      used[outputKey] = true;
+      return outputKey;
+    });
   }
 
   function stringifyMetadataDiagnostic(diagnostic) {
