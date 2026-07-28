@@ -132,6 +132,11 @@ async function main() {
   for (let index = 0; index < 31; index += 1) {
     hugeMeta[`key_${String(index).padStart(2, "0")}`] = `metadata_${index}`;
   }
+  const inheritedMetadataPrototype = {};
+  for (let index = 0; index < 250; index += 1) {
+    inheritedMetadataPrototype[`inherited_${index}`] = `SECRET_INHERITED_META_${index}`;
+  }
+  const prototypeMeta = Object.create(inheritedMetadataPrototype);
 
   global.$container = "metadata-harness-component";
   const runtimeOptions = {
@@ -180,7 +185,7 @@ async function main() {
       entries: [{name: "SECRET_NESTED_ENTRIES"}],
       dataSet: [null, null, null, {region: "SECRET_NESTED_DATASET"}],
       fieldDataset: [{region: "SECRET_NESTED_FIELD_DATASET"}],
-      bundle: [null, null, null, {region: "SECRET_NESTED_BUNDLE"}],
+      bundle: [null, null, null, ["SECRET_NESTED_BUNDLE", 42]],
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
       endpoint: "https://alice:OPAQUE_URL_CREDENTIAL@example.com/path",
@@ -209,13 +214,19 @@ async function main() {
     queryEntries: [{name: "SECRET_QUERY_ENTRIES"}],
     queryDataset: [null, null, null, {region: "SECRET_QUERY_DATASET"}],
     queryFieldDataset: [{region: "SECRET_QUERY_FIELD_DATASET"}],
-    queryBundle: [null, null, null, {region: "SECRET_QUERY_BUNDLE"}],
+    queryBundle: [null, null, null, ["SECRET_QUERY_BUNDLE", 42]],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
+    prototypeMeta,
     schemaMeta,
     renderHelper() {},
     chartElement: {nodeType: 1, nodeName: "DIV"},
   });
+  const inheritedRuntimePrototype = {};
+  for (let index = 0; index < 2100; index += 1) {
+    inheritedRuntimePrototype[`inherited_option_${index}`] = "SECRET_INHERITED_OPTION";
+  }
+  Object.setPrototypeOf(runtimeOptions, inheritedRuntimePrototype);
   global.options = runtimeOptions;
 
   require(path.resolve(__dirname, "../component/yonghong_ai_component.js"));
@@ -227,7 +238,7 @@ async function main() {
 
   assert.deepStrictEqual(
     diagnostic.metadataCandidateKeys,
-    ["fieldMeta", "headers", "hugeMeta", "qinfo", "schemaMeta"],
+    ["fieldMeta", "headers", "hugeMeta", "prototypeMeta", "qinfo", "schemaMeta"],
   );
   assert.deepStrictEqual(
     diagnostic.omittedRowCandidateKeys,
@@ -245,7 +256,7 @@ async function main() {
   );
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
   assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
-  assert.strictEqual(diagnostic.optionKeyScan.scanTruncated, false);
+  assert.strictEqual(diagnostic.optionKeyScan.scanTruncated, true);
   assert.strictEqual(diagnostic.boundSources[0], "column1");
   assert.match(diagnostic.boundSources[1], /\[键已截断\]$/);
   assert.ok(diagnostic.boundSources[1].length < 200);
@@ -299,6 +310,7 @@ async function main() {
   assert.match(diagnostic.metadata.headers, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
+  assert.strictEqual(diagnostic.metadata.prototypeMeta.__truncatedKeys, true);
   assert.strictEqual(
     Object.keys(diagnostic.metadata.hugeMeta).filter((key) => key !== "__truncatedKeys").length,
     30,
@@ -359,6 +371,8 @@ async function main() {
     "SECRET_QUERY_FIELD_DATASET",
     "SECRET_NESTED_BUNDLE",
     "SECRET_QUERY_BUNDLE",
+    "SECRET_INHERITED_META_",
+    "SECRET_INHERITED_OPTION",
     "OPAQUE_ACCOUNT_KEY",
     "OPAQUE_AWS_SECRET",
     "OPAQUE_ENCRYPTION_KEY",
