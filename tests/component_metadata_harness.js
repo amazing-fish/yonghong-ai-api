@@ -210,6 +210,10 @@ async function main() {
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
+      javaHeaderText: "JSESSIONID=OPAQUE_JAVA_SESSION_ID",
+      phpHeaderText: "PHPSESSID=OPAQUE_PHP_SESSION_ID",
+      aspHeaderText: "ASP.NET_SessionId=OPAQUE_ASP_SESSION_ID",
+      connectHeaderText: "connect.sid=OPAQUE_CONNECT_SESSION_ID",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
@@ -378,6 +382,10 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.environmentText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.javaHeaderText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.phpHeaderText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.aspHeaderText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.connectHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
@@ -547,6 +555,10 @@ async function main() {
     "OPAQUE_PRIVATE_KEY_VALUE",
     "OPAQUE_LATER_DESCRIPTOR_PASSWORD",
     "OPAQUE_XML_PRIVATE_KEY",
+    "OPAQUE_JAVA_SESSION_ID",
+    "OPAQUE_PHP_SESSION_ID",
+    "OPAQUE_ASP_SESSION_ID",
+    "OPAQUE_CONNECT_SESSION_ID",
     "OPAQUE_SYMMETRIC_JWK_KEY",
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
