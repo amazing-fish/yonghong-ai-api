@@ -206,6 +206,7 @@ async function main() {
       encodedUrl: "https%3A%2F%2Fexample.com%2Fobject%3FX-Amz-Signature%3DOPAQUE_ENCODED_AWS_SIGNATURE",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
+      databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
@@ -213,6 +214,9 @@ async function main() {
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       xmlDescriptor: "<property name=\"password\" value=\"OPAQUE_XML_DESCRIPTOR_PASSWORD\"/>",
+      xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
+      xmlCamelDescriptor: "<property name=\"dbPassword\" value=\"OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD\"/>",
+      xmlCamelElement: "<dbPassword>OPAQUE_XML_CAMEL_PASSWORD</dbPassword>",
       xmlText: "<connection><password>OPAQUE_XML_PASSWORD</password></connection>",
     },
     fieldMeta,
@@ -364,12 +368,16 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.encodedUrl, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlAttribute, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlCamelDescriptor, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlCamelElement, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
@@ -515,6 +523,11 @@ async function main() {
     "OPAQUE_PREFIXED_DB_PASSWORD",
     "OPAQUE_XML_DESCRIPTOR_PASSWORD",
     "OPAQUE_XML_PASSWORD",
+    "OPAQUE_XML_ATTRIBUTE_PASSWORD",
+    "OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD",
+    "OPAQUE_XML_CAMEL_PASSWORD",
+    "OPAQUE_CAMEL_DB_PASSWORD",
+    "OPAQUE_CAMEL_DATABASE_PASSWORD",
     "OPAQUE_SYMMETRIC_JWK_KEY",
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
