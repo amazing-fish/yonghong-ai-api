@@ -597,7 +597,7 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     if (/metadata$/i.test(text)) return false;
-    return /(?:data|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|items?|list|payload|content)$/i.test(text);
+    return /(?:data|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|items?|list|payload|content)$/i.test(text);
   }
 
   function isSensitiveMetadataKey(key) {
@@ -704,6 +704,7 @@
       /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|pwd|passphrase|client[-_]?secret|secret)\b\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]{8,}/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\b/i.test(sample) ||
+      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]+:[^\/\s@]+@/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
   }
