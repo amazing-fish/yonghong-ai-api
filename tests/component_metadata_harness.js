@@ -178,12 +178,13 @@ async function main() {
       queryResponse: [{name: "SECRET_NESTED_QUERY_RESPONSE"}],
       queryOutput: [{name: "SECRET_NESTED_QUERY_OUTPUT"}],
       entries: [{name: "SECRET_NESTED_ENTRIES"}],
-      dataSet: [{region: "SECRET_NESTED_DATASET"}],
+      dataSet: [null, null, null, {region: "SECRET_NESTED_DATASET"}],
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
       endpoint: "https://alice:OPAQUE_URL_CREDENTIAL@example.com/path",
       serializedConfig: "{\"password\":\"OPAQUE_JSON_PASSWORD\"}",
       storageConnection: "DefaultEndpointsProtocol=https;AccountName=demo;AccountKey=OPAQUE_ACCOUNT_KEY",
+      cloudConfig: "AWS_SECRET_ACCESS_KEY=OPAQUE_AWS_SECRET",
       tls: {
         pem: "-----BEGIN OPENSSH PRIVATE KEY-----\nSECRET_PEM_BODY",
         encryptedPem: "-----BEGIN ENCRYPTED PRIVATE KEY-----\nSECRET_ENCRYPTED_PEM_BODY",
@@ -204,7 +205,7 @@ async function main() {
     queryResultSet: [{name: "SECRET_QUERY_RESULT_SET"}],
     queryResponse: [{name: "SECRET_QUERY_RESPONSE"}],
     queryEntries: [{name: "SECRET_QUERY_ENTRIES"}],
-    queryDataset: [{region: "SECRET_QUERY_DATASET"}],
+    queryDataset: [null, null, null, {region: "SECRET_QUERY_DATASET"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
@@ -277,6 +278,7 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.endpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.serializedConfig, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.storageConnection, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.cloudConfig, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.pem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.encryptedPem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.dsaPem, /已省略可能包含凭证的字符串/);
@@ -346,6 +348,7 @@ async function main() {
     "SECRET_NESTED_DATASET",
     "SECRET_QUERY_DATASET",
     "OPAQUE_ACCOUNT_KEY",
+    "OPAQUE_AWS_SECRET",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
