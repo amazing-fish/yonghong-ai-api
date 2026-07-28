@@ -174,6 +174,9 @@ async function main() {
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
       endpoint: "https://alice:OPAQUE_URL_CREDENTIAL@example.com/path",
+      tls: {
+        pem: "-----BEGIN OPENSSH PRIVATE KEY-----\nSECRET_PEM_BODY",
+      },
       encryptionKey: "OPAQUE_ENCRYPTION_KEY",
       signingKey: "OPAQUE_SIGNING_KEY",
       cookie: "SECRET_COOKIE",
@@ -248,6 +251,7 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.qinfo.numericPrecision, "[已省略 BigInt]");
   assert.strictEqual(diagnostic.metadata.qinfo.marker, "[已省略 Symbol]");
   assert.match(diagnostic.metadata.qinfo.endpoint, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.tls.pem, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "jwt"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "pwd"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passwd"));
@@ -304,6 +308,7 @@ async function main() {
     "SECRET_QUERY_RESPONSE",
     "SECRET_SYMBOL_DESCRIPTION",
     "OPAQUE_URL_CREDENTIAL",
+    "SECRET_PEM_BODY",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
