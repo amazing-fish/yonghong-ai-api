@@ -169,6 +169,10 @@ async function main() {
   runtimeOptions[collisionKeyA] = {expression: "FIRST_COLLISION_FORMULA"};
   runtimeOptions[collisionKeyB] = {expression: "SECOND_COLLISION_FORMULA"};
   runtimeOptions.aggregateFunctions = ["SUM", "AVG"];
+  runtimeOptions.fieldList = [
+    {name: "region", role: "dimension"},
+    {name: "revenue", role: "measure"},
+  ];
   runtimeOptions.formulaExpressions = ["failure_count / total_count", "revenue - cost"];
 
   const primaryDate = new Date("2026-07-28T00:00:00.000Z");
@@ -182,6 +186,7 @@ async function main() {
   Object.assign(runtimeOptions, {
     configMeta: {
       boxedSettings: new String("password=OPAQUE_BOXED_STRING_PASSWORD"),
+      commandSettings: "--password OPAQUE_COMMAND_PASSWORD",
       connectionDsn: "demo:OPAQUE_SCHEMELESS_DSN_PASSWORD@tcp(db:3306)/app",
       connectionSettings: "{\"user\":\"demo\",\"pass\":\"OPAQUE_SERIALIZED_PASS_VALUE\"}",
       cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
@@ -191,6 +196,7 @@ async function main() {
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
+      netrcSettings: "machine registry.example login build password OPAQUE_NETRC_PASSWORD",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       subclassedSettings: new (class extends String {})("token=OPAQUE_STRING_SUBCLASS_TOKEN"),
@@ -304,7 +310,7 @@ async function main() {
       note: "eyJhbGciOiJIUzI1NiJ9.eyJzZWNyZXQiOiJTRUNSRVRfUkFXX0pXVCJ9.signature123",
       connection: "UID=user;PWD=OPAQUE_CONNECTION_SECRET",
       recordList: [{name: "SECRET_NESTED_RECORD_LIST"}],
-      fieldItems: [{name: "SECRET_NESTED_FIELD_ITEMS"}],
+      recordItems: [{name: "SECRET_NESTED_RECORD_ITEMS"}],
       resultSet: [{name: "SECRET_NESTED_RESULT_SET"}],
       recordSet: [{name: "SECRET_NESTED_RECORD_SET"}],
       queryResponse: [{name: "SECRET_NESTED_QUERY_RESPONSE"}],
@@ -376,6 +382,7 @@ async function main() {
       "cryptoMeta",
       "dateMeta",
       "downloadMeta",
+      "fieldList",
       "fieldMeta",
       "formulaExpressions",
       collisionOutputKey,
@@ -411,6 +418,7 @@ async function main() {
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
   assert.match(diagnostic.metadata.configMeta.boxedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.commandSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.connectionDsn, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.connectionSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
@@ -420,6 +428,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.netrcSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.subclassedSettings, /已省略可能包含凭证的字符串/);
@@ -479,6 +488,10 @@ async function main() {
   );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
+  assert.deepStrictEqual(diagnostic.metadata.fieldList, [
+    {name: "region", role: "dimension"},
+    {name: "revenue", role: "measure"},
+  ]);
   assert.match(diagnostic.metadata.fieldMeta.headerDescriptor, /已省略敏感名称\/值描述符/);
   assert.strictEqual(diagnostic.metadata.fieldMeta.self, "[循环引用]");
   assert.strictEqual(diagnostic.metadata.fieldMeta.choices.length, 6);
@@ -503,7 +516,7 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.note, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.connection, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.recordList, /已省略潜在行数据/);
-  assert.match(diagnostic.metadata.qinfo.fieldItems, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.recordItems, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.resultSet, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.recordSet, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.queryResponse, /已省略潜在行数据/);
@@ -573,7 +586,7 @@ async function main() {
     "OPAQUE_CONNECTION_SECRET",
     "SECRET_QUERY_LIST",
     "SECRET_NESTED_RECORD_LIST",
-    "SECRET_NESTED_FIELD_ITEMS",
+    "SECRET_NESTED_RECORD_ITEMS",
     "SECRET_NESTED_RESULT_SET",
     "SECRET_NESTED_RECORD_SET",
     "SECRET_QUERY_RESULT_SET",
@@ -644,6 +657,8 @@ async function main() {
     "OPAQUE_STRING_SUBCLASS_TOKEN",
     "OPAQUE_SCHEMELESS_DSN_PASSWORD",
     "OPAQUE_HEADER_VALUE_DESCRIPTOR",
+    "OPAQUE_COMMAND_PASSWORD",
+    "OPAQUE_NETRC_PASSWORD",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
