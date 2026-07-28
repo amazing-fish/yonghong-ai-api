@@ -125,6 +125,7 @@ async function main() {
       truncatedDescriptor,
     ],
     rows: [{name: "SECRET_NESTED_ROW"}],
+    choiceDefinitions: [{label: "Enabled", value: "enabled"}],
     headerDescriptor: {
       headerName: "Authorization",
       headerValue: "OPAQUE_HEADER_VALUE_DESCRIPTOR",
@@ -243,6 +244,7 @@ async function main() {
           {type: "string"},
         ],
       },
+      curlCommand: "curl -u demo:OPAQUE_CURL_PASSWORD https://example.com",
       connectionOptions: {
         user: "demo",
         pass: "OPAQUE_OBJECT_PASS_VALUE",
@@ -252,6 +254,7 @@ async function main() {
         "current-value": "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
       },
       mapsEndpoint: "https://maps.googleapis.com/maps/api/geocode/json?key=OPAQUE_MAPS_API_KEY",
+      rowsByIndex: {0: {customer: "SECRET_ROWS_BY_INDEX_VALUE"}},
       defaultDescriptor: {
         name: "password",
         default_value: "OPAQUE_DEFAULT_VALUE_DESCRIPTOR",
@@ -496,7 +499,9 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.cryptoMeta.connectionOptions.user, "demo");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.connectionOptions, "pass"));
   assert.match(diagnostic.metadata.cryptoMeta.currentDescriptor, /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.cryptoMeta.curlCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.mapsEndpoint, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.cryptoMeta.rowsByIndex, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.defaultDescriptor, /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.cryptoMeta.rawDescriptor, /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
@@ -548,6 +553,7 @@ async function main() {
   );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
+  assert.deepStrictEqual(diagnostic.metadata.fieldMeta.choiceDefinitions, [{label: "Enabled", value: "enabled"}]);
   assert.deepStrictEqual(diagnostic.metadata.fieldList, [
     {name: "region", role: "dimension"},
     {name: "revenue", role: "measure"},
@@ -737,6 +743,8 @@ async function main() {
     "OPAQUE_LONG_DSN_PASSWORD",
     "SECRET_CELL_METADATA_VALUE",
     "OPAQUE_MAPS_API_KEY",
+    "OPAQUE_CURL_PASSWORD",
+    "SECRET_ROWS_BY_INDEX_VALUE",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
