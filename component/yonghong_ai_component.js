@@ -742,32 +742,15 @@
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(inspectionSample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@]+@/i.test(normalizedUrlSample) ||
-      hasLiteralMetadataUrlUserinfo(value) ||
+      /(?:^|[\s;,])[^:\s@\/]+:[^@\s\/]+@(?:tcp|unix)\([^)\s]*\)(?:\/|$)/i.test(inspectionSample) ||
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
-        /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]{32,}$/i.test(normalizedUrlSample)
+        /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@?#]{32,}$/i.test(normalizedUrlSample)
       ) ||
       /[?&](?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(inspectionSample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(inspectionSample)
     );
-  }
-
-  function hasLiteralMetadataUrlUserinfo(value) {
-    var slashes = value.indexOf("//");
-    if (slashes < 0) return false;
-    var authorityStart = slashes + 2;
-    var at = value.indexOf("@", authorityStart);
-    if (at <= authorityStart) return false;
-    var separators = ["/", "?", "#"];
-    for (var index = 0; index < separators.length; index += 1) {
-      var separator = value.indexOf(separators[index], authorityStart);
-      if (separator >= 0 && separator < at) return false;
-    }
-    for (var charIndex = authorityStart; charIndex < at; charIndex += 1) {
-      if (/\s/.test(value.charAt(charIndex))) return false;
-    }
-    return true;
   }
 
   function normalizeMetadataStringEscapes(value) {
@@ -899,10 +882,10 @@
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
         var normalizedKey = String(key).toLowerCase().replace(/[-_.\s]/g, "");
-        if (/^(?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)$/.test(normalizedKey)) {
+        if (/^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(normalizedKey)) {
           hasAssociatedValue = true;
         }
-        if (!/^(?:name|key|header|label)$/.test(normalizedKey)) continue;
+        if (!/^(?:name|key|header|headername|label)$/.test(normalizedKey)) continue;
         try {
           if (isSensitiveMetadataKey(value[key])) hasSensitiveName = true;
         } catch (_) {
