@@ -609,7 +609,7 @@
   }
 
   function isSensitiveMetadataKey(key) {
-    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
+    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
   }
 
   function isNestedRowDataKey(key) {
@@ -748,24 +748,30 @@
   }
 
   function isSensitiveNamedValueDescriptor(value) {
-    var nameKeys = ["name", "key", "header", "label"];
-    var valueKeys = ["value", "values", "val", "data", "content", "text", "defaultValue", "currentValue", "rawValue"];
     var hasSensitiveName = false;
-    var hasAssociatedValue = valueKeys.some(function (key) {
-      return Object.prototype.hasOwnProperty.call(value, key);
-    });
-
-    if (!hasAssociatedValue) return false;
-    nameKeys.some(function (key) {
-      if (!Object.prototype.hasOwnProperty.call(value, key)) return false;
-      try {
-        hasSensitiveName = isSensitiveMetadataKey(value[key]);
-      } catch (_) {
-        hasSensitiveName = true;
+    var hasAssociatedValue = false;
+    var scanned = 0;
+    try {
+      for (var key in value) {
+        scanned += 1;
+        if (scanned > CONFIG.METADATA_MAX_SCANNED_OBJECT_KEYS) break;
+        if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+        var normalizedKey = String(key).toLowerCase();
+        if (/^(?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)$/.test(normalizedKey)) {
+          hasAssociatedValue = true;
+        }
+        if (!/^(?:name|key|header|label)$/.test(normalizedKey)) continue;
+        try {
+          if (isSensitiveMetadataKey(value[key])) hasSensitiveName = true;
+        } catch (_) {
+          hasSensitiveName = true;
+        }
+        if (hasSensitiveName && hasAssociatedValue) return true;
       }
-      return hasSensitiveName;
-    });
-    return hasSensitiveName;
+    } catch (_) {
+      return true;
+    }
+    return hasSensitiveName && hasAssociatedValue;
   }
 
   function collectBoundedMetadataObjectKeys(value) {
