@@ -433,7 +433,9 @@
       metadataCandidateKeys: keySets.candidateKeys.map(truncateMetadataKey),
       omittedRowCandidateKeys: keySets.omittedRowCandidateKeys.map(truncateMetadataKey),
       optionKeyScan: keySets.scan,
-      boundSources: state.boundFields.map(function (field) { return field.source; }),
+      boundSources: state.boundFields.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(function (field) {
+        return truncateMetadataKey(field.source);
+      }),
       configuredFieldCount: state.settings.fieldDefinitions.length,
       note: "字段名、角色和计算公式不会从 options.data 自动推断；如 metadataCandidateKeys 非空，可把本段结果交给开发者继续适配。"
     };
@@ -481,11 +483,11 @@
       omittedRowCandidateKeys: keySets.omittedRowCandidateKeys.map(truncateMetadataKey),
       optionKeyScan: keySets.scan,
       boundSources: state.boundFields.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(function (field) {
-        return field.source;
+        return truncateMetadataKey(field.source);
       }),
       configuredFields: state.boundFields.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(function (field) {
         return {
-          source: field.source,
+          source: truncateMetadataKey(field.source),
           name: String(field.name).slice(0, CONFIG.METADATA_MAX_KEY_CHARS),
           role: field.role
         };
@@ -498,6 +500,7 @@
         maxStringChars: CONFIG.METADATA_MAX_STRING_CHARS,
         maxOptionKeys: CONFIG.METADATA_MAX_OPTION_KEYS,
         maxCandidates: CONFIG.METADATA_MAX_CANDIDATES,
+        maxKeyChars: CONFIG.METADATA_MAX_KEY_CHARS,
         maxTotalNodes: CONFIG.METADATA_MAX_TOTAL_NODES,
         maxTotalChars: CONFIG.METADATA_MAX_TOTAL_CHARS,
         maxJsonChars: CONFIG.METADATA_MAX_JSON_CHARS,
@@ -786,7 +789,7 @@
       metadataCandidateKeys: diagnostic.metadataCandidateKeys,
       omittedRowCandidateKeys: diagnostic.omittedRowCandidateKeys,
       optionKeyScan: diagnostic.optionKeyScan,
-      boundSources: diagnostic.boundSources,
+      boundSources: diagnostic.boundSources.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(truncateMetadataKey),
       metadata: {"__truncated": "诊断超过最终 JSON 限制，元数据内容已省略"},
       limits: diagnostic.limits,
       budget: {
