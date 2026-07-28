@@ -625,8 +625,7 @@
   function isSensitiveMetadataKey(key) {
     var text = String(key);
     return (
-      /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
-      /^[A-Z][A-Z0-9]{0,120}PASS$/.test(text) ||
+      /^[A-Za-z][A-Za-z0-9]{0,120}pass$/i.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Tokens?|Secrets?|Passwords?|Passwds?|Pwds?|Passphrases?|Credentials?|SessionIds?|Cookies?)$/.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:string|value|text|data|blob|bytes|base64)$/i.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:map|lookup|index|dictionary|dict|by[a-z0-9]+)$/i.test(text) ||
@@ -1097,7 +1096,7 @@
     if (!isPlainObject(value) || !isJsonSchemaShapedObject(parent)) return null;
     if (/^dependentrequired$/i.test(String(key))) return "dependentRequired";
     if (/^properties$/i.test(String(key))) return "properties";
-    if (/^(?:\$defs|definitions|patternproperties)$/i.test(String(key))) return "definitions";
+    if (/^(?:\$defs|definitions|patternproperties|dependentschemas)$/i.test(String(key))) return "definitions";
     return null;
   }
 
