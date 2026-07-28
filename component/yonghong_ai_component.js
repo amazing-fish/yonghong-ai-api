@@ -599,7 +599,7 @@
   }
 
   function isSensitiveMetadataKey(key) {
-    return /auth|bearer|cookie|token|secret|password|api.?key|access.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
+    return /auth|bearer|cookie|token|jwt|secret|password|api.?key|access.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
   }
 
   function isNestedRowDataKey(key) {
@@ -696,6 +696,7 @@
     return (
       /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|client[-_]?secret|secret)\b\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]{8,}/i.test(sample) ||
+      /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\b/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
   }
@@ -795,7 +796,7 @@
     var text = JSON.stringify(diagnostic, null, 2);
     if (text.length <= CONFIG.METADATA_MAX_JSON_CHARS) return text;
 
-    return JSON.stringify({
+    var fallbackText = JSON.stringify({
       schemaVersion: diagnostic.schemaVersion,
       optionsKeys: diagnostic.optionsKeys,
       metadataCandidateKeys: diagnostic.metadataCandidateKeys,
@@ -812,6 +813,17 @@
       },
       safety: diagnostic.safety
     }, null, 2);
+    if (fallbackText.length <= CONFIG.METADATA_MAX_JSON_CHARS) return fallbackText;
+
+    var minimalText = JSON.stringify({
+      schemaVersion: 1,
+      metadata: {"__truncated": "诊断超过最终 JSON 限制，详细内容已省略"},
+      limits: {maxJsonChars: CONFIG.METADATA_MAX_JSON_CHARS},
+      budget: {truncated: true, exhausted: true},
+      safety: "诊断已缩减以满足最终 JSON 长度限制；不包含行值或凭证。"
+    }, null, 2);
+    if (minimalText.length <= CONFIG.METADATA_MAX_JSON_CHARS) return minimalText;
+    return "{\"schemaVersion\":1,\"metadata\":{\"__truncated\":\"diagnostic omitted\"}}";
   }
 
   function describeOmittedRowData(value) {
