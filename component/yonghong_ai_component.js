@@ -705,18 +705,21 @@
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]{8,}/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\b/i.test(sample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]+:[^\/\s@]+@/i.test(sample) ||
-      /-----BEGIN (?:(?:RSA|EC|OPENSSH) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
+      /-----BEGIN (?:(?:RSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
   }
 
   function isSensitiveNameValueTuple(value) {
-    if (value.length !== 2) return false;
-    try {
-      return isSensitiveMetadataKey(value[0]);
-    } catch (_) {
-      return true;
+    var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
+    for (var index = 0; index + 1 < visibleLength; index += 2) {
+      try {
+        if (isSensitiveMetadataKey(value[index])) return true;
+      } catch (_) {
+        return true;
+      }
     }
+    return false;
   }
 
   function isSensitiveNamedValueDescriptor(value) {
