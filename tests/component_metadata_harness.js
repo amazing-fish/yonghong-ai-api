@@ -120,6 +120,8 @@ async function main() {
         {name: "failure_rate", type: "double"},
         {name: "Authorization", value: "SECRET_DESCRIPTOR_AUTH"},
         {key: "sessionToken", value: "SECRET_DESCRIPTOR_TOKEN"},
+        ["Authorization", "SECRET_TUPLE_AUTH"],
+        ["sessionToken", "SECRET_TUPLE_TOKEN"],
       ],
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
@@ -165,6 +167,8 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.fieldData, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.headers[1], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.qinfo.headers[2], /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.qinfo.headers[3], /已省略敏感名称\/值元组/);
+  assert.match(diagnostic.metadata.qinfo.headers[4], /已省略敏感名称\/值元组/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
   assert.strictEqual(
@@ -190,6 +194,8 @@ async function main() {
     "SECRET_NESTED_FIELD_ROW",
     "SECRET_DESCRIPTOR_AUTH",
     "SECRET_DESCRIPTOR_TOKEN",
+    "SECRET_TUPLE_AUTH",
+    "SECRET_TUPLE_TOKEN",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
