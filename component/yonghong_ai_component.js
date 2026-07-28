@@ -625,7 +625,7 @@
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Token|Secret|Password|Passwd|Pwd|Passphrase|Credential|SessionId)$/.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
-      /(?:^|[^a-z0-9])(?:pass|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|session|credential|csrf)(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth|api.?key|access.?key|account.?key|secret.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|webhook(?:[-_.]?(?:url|uri|endpoint))?|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)/i.test(text)
+      /(?:^|[^a-z0-9])(?:pass|bearers?|cookies?|tokens?|jwts?|secrets?|passwords?|passwds?|pwds?|passphrases?|sessions?|credentials?|csrf)(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth|api.?key|access.?key|account.?key|secret.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|webhook(?:[-_.]?(?:url|uri|endpoint))?|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)/i.test(text)
     );
   }
 
