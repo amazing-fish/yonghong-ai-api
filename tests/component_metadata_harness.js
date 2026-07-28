@@ -103,7 +103,11 @@ async function main() {
 
   const fieldMeta = {
     arrayTypeSchema: {
-      type: ["object", "null"],
+      type: ["array", "null"],
+      items: [
+        {type: "string"},
+        false,
+      ],
       required: ["id"],
     },
     cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
@@ -233,6 +237,8 @@ async function main() {
         passwordHash: "OPAQUE_PASSWORD_HASH",
         passwordString: "OPAQUE_PASSWORD_STRING",
         privateKeyString: "OPAQUE_PRIVATE_KEY_STRING",
+        "Private Key": "OPAQUE_DISPLAY_PRIVATE_KEY",
+        requestSignature: "OPAQUE_REQUEST_SIGNATURE",
         secretKey: "OPAQUE_OBJECT_SECRET_KEY",
         secrets: "OPAQUE_SECRETS_BLOB",
         sessionId: "OPAQUE_SESSION_ID",
@@ -326,7 +332,7 @@ async function main() {
         pass: "OPAQUE_OBJECT_PASS_VALUE",
       },
       currentDescriptor: {
-        name: "password",
+        name: "API Key",
         "current-value": "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
       },
       mapsEndpoint: "https://maps.googleapis.com/maps/api/geocode/json?key=OPAQUE_MAPS_API_KEY",
@@ -571,6 +577,8 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordHash"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordString"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "privateKeyString"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "Private Key"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "requestSignature"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secretKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secrets"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "sessionId"));
@@ -687,6 +695,8 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.xmlTruncatedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
   assert.deepStrictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.required, ["id"]);
+  assert.strictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.items[0].type, "string");
+  assert.strictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.items[1], false);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.deepStrictEqual(
