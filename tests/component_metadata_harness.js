@@ -112,6 +112,8 @@ async function main() {
   for (let index = 0; index < 150; index += 1) {
     runtimeOptions[`a_option_${String(index).padStart(3, "0")}`] = index;
   }
+  const oversizedSource = `column${"9".repeat(40000)}`;
+  runtimeOptions[oversizedSource] = [];
   Object.assign(runtimeOptions, {
     fieldMeta,
     hugeMeta,
@@ -153,7 +155,10 @@ async function main() {
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
   assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
   assert.strictEqual(diagnostic.optionKeyScan.scanTruncated, false);
-  assert.deepStrictEqual(diagnostic.boundSources, ["column1"]);
+  assert.strictEqual(diagnostic.boundSources[0], "column1");
+  assert.match(diagnostic.boundSources[1], /\[键已截断\]$/);
+  assert.ok(diagnostic.boundSources[1].length < 200);
+  assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.strictEqual(diagnostic.metadata.fieldMeta.self, "[循环引用]");
