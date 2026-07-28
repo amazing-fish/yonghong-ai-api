@@ -222,6 +222,7 @@ async function main() {
         tlsKey: "OPAQUE_TLS_PRIVATE_KEY",
         tokens: "OPAQUE_TOKENS_BLOB",
         webhookUrl: "https://hooks.slack.com/services/T123/B456/OPAQUE_WEBHOOK_SECRET",
+        "https://example.com/cb#code=OPAQUE_OBJECT_KEY_CODE": {kind: "callback"},
       },
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       jsonSchema: {
@@ -355,7 +356,7 @@ async function main() {
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
       serializedHeaderTuple: "[\"Authorization\",\"OPAQUE_SERIALIZED_TUPLE_TOKEN\"]",
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
-      xmlDescriptor: "<property><name>password</name><value>OPAQUE_XML_DESCRIPTOR_PASSWORD</value></property>",
+      xmlDescriptor: "<property><name><![CDATA[password]]></name><value>OPAQUE_XML_DESCRIPTOR_PASSWORD</value></property>",
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
       xmlCamelDescriptor: "<property name=\"dbPassword\" value=\"OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD\"/>",
       xmlCamelElement: "<tlsKey>OPAQUE_XML_TLS_KEY</tlsKey>",
@@ -537,6 +538,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "tlsKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "tokens"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "webhookUrl"));
+  assert.ok(!Object.keys(diagnostic.metadata.configMeta.mailSettings).some((key) => key.includes("OPAQUE_OBJECT_KEY_CODE")));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
