@@ -88,12 +88,12 @@
     // options.data carries row values. Yonghong also exposes options.columnN
     // arrays, which lets us retain bindings even when filtering returns zero rows.
     Object.keys(runtime).forEach(function (key) {
-      if (/^column\d+$/.test(key)) keys[key] = true;
+      if (isRuntimeColumnKey(key)) keys[key] = true;
     });
     source.slice(0, CONFIG.MAX_ROWS).forEach(function (row) {
       if (!isPlainObject(row)) return;
       Object.keys(row).forEach(function (key) {
-        if (/^column\d+$/.test(key)) keys[key] = true;
+        if (isRuntimeColumnKey(key)) keys[key] = true;
       });
     });
 
@@ -131,7 +131,7 @@
     var usedSources = Object.create(null);
     return source.map(function (item) {
       var sourceName = item && String(item.source || "").trim();
-      if (!/^column\d+$/.test(sourceName) || usedSources[sourceName]) return null;
+      if (!isRuntimeColumnKey(sourceName) || usedSources[sourceName]) return null;
       usedSources[sourceName] = true;
       var role = item.role === "dimension" || item.role === "measure" ? item.role : "unknown";
       return {
@@ -145,7 +145,19 @@
   }
 
   function compareColumnKeys(left, right) {
-    return parseInt(left.replace("column", ""), 10) - parseInt(right.replace("column", ""), 10);
+    return getRuntimeColumnOrdinal(left) - getRuntimeColumnOrdinal(right);
+  }
+
+  function isRuntimeColumnKey(key) {
+    var text = String(key);
+    var maxChars = CONFIG.METADATA_MAX_KEY_CHARS;
+    if (text.length <= maxChars * 2) return /^column\d+$/.test(text);
+    return /^column\d+$/.test(text.slice(0, maxChars)) && /^\d+$/.test(text.slice(-maxChars));
+  }
+
+  function getRuntimeColumnOrdinal(key) {
+    var match = String(key).slice(0, CONFIG.METADATA_MAX_KEY_CHARS).match(/^column(\d+)/);
+    return match ? parseInt(match[1], 10) : Number.MAX_VALUE;
   }
 
   function render() {
@@ -538,7 +550,7 @@
           break;
         }
         if (!Object.prototype.hasOwnProperty.call(runtime, key)) continue;
-        if (isSensitiveMetadataKey(key) || isSensitiveMetadataString(String(key))) continue;
+        if (isSensitiveMetadataInspectionKey(key)) continue;
 
         if (optionKeys.length < CONFIG.METADATA_MAX_OPTION_KEYS) {
           optionKeys.push(key);
@@ -592,7 +604,7 @@
   function isMetadataCandidateKey(key) {
     return (
       key !== "data" &&
-      !/^column\d+$/.test(key) &&
+      !isRuntimeColumnKey(key) &&
       !isSensitiveMetadataKey(key) &&
       !isTopLevelRowDataKey(key) &&
       looksLikeMetadataKey(key)
@@ -600,11 +612,17 @@
   }
 
   function looksLikeMetadataKey(key) {
-    return /field|column|meta|label|name|alias|dimension|measure|metric|aggregat|formula|expression|calc|query|qinfo|header|schema|binding|bind|role|type|definition|function|choice|enum|categor/i.test(String(key));
+    return boundedMetadataKeyMatches(
+      key,
+      /field|column|meta|label|name|alias|dimension|measure|metric|aggregat|formula|expression|calc|query|qinfo|header|schema|binding|bind|role|type|definition|function|choice|enum|categor/i
+    );
   }
 
   function isTopLevelRowDataKey(key) {
-    var text = String(key);
+    return getBoundedMetadataKeySamples(key).some(isTopLevelRowDataKeySample);
+  }
+
+  function isTopLevelRowDataKeySample(text) {
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:(?:dimension|hierarchy|level))?members?(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
     if (/^(?:dimension|hierarchy|level)(?:values?|nodes?)(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
@@ -619,11 +637,17 @@
   }
 
   function isStructuralMetadataCollectionKey(key) {
-    return /^(?:fields?|columns?|headers?|schemas?|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|aggregations?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)(?:list|items|collections?)$/i.test(String(key));
+    return boundedMetadataKeyMatches(
+      key,
+      /^(?:fields?|columns?|headers?|schemas?|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|aggregations?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)(?:list|items|collections?)$/i
+    );
   }
 
   function isSensitiveMetadataKey(key) {
-    var text = String(key);
+    return getBoundedMetadataKeySamples(key).some(isSensitiveMetadataKeySample);
+  }
+
+  function isSensitiveMetadataKeySample(text) {
     return (
       /^[A-Za-z][A-Za-z0-9]{0,120}pass$/i.test(text) ||
       /^[A-Za-z][A-Za-z0-9]{0,120}(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|sessionids?|cookies?)$/i.test(text) ||
@@ -643,6 +667,31 @@
     );
   }
 
+  function isSensitiveMetadataInspectionKey(key) {
+    if (isSensitiveMetadataKey(key)) return true;
+    return getBoundedMetadataKeySamples(key).some(function (sample) {
+      return isSensitiveMetadataString(sample);
+    });
+  }
+
+  function getBoundedMetadataKeySamples(key) {
+    var text = String(key);
+    var maxChars = CONFIG.METADATA_MAX_KEY_CHARS;
+    if (text.length <= maxChars) return [text];
+    return [text.slice(0, maxChars), text.slice(-maxChars)];
+  }
+
+  function getBoundedMetadataKeyPrefix(key) {
+    return String(key).slice(0, CONFIG.METADATA_MAX_KEY_CHARS);
+  }
+
+  function boundedMetadataKeyMatches(key, pattern) {
+    return getBoundedMetadataKeySamples(key).some(function (sample) {
+      pattern.lastIndex = 0;
+      return pattern.test(sample);
+    });
+  }
+
   function hasSensitiveMetadataKeyAlias(text) {
     return (
       /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.\s]?keys?(?:[-_.\s]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
@@ -657,12 +706,13 @@
   }
 
   function isNestedRowDataKey(key) {
-    var text = String(key);
-    return (
-      isTopLevelRowDataKey(text) ||
-      /^(items?|list)$/i.test(text) ||
-      /(?:sample|example|row|record)(?:data|values?)?$/i.test(text)
-    );
+    return getBoundedMetadataKeySamples(key).some(function (text) {
+      return (
+        isTopLevelRowDataKeySample(text) ||
+        /^(items?|list)$/i.test(text) ||
+        /(?:sample|example|row|record)(?:data|values?)?$/i.test(text)
+      );
+    });
   }
 
   function summarizeMetadataValue(value, depth, seen, budget, schemaContext) {
@@ -1072,11 +1122,15 @@
     for (var index = 0; index + 1 < visibleLength; index += 2) {
       try {
         if (isSensitiveMetadataKey(value[index])) return true;
-        var descriptorKey = String(value[index]).toLowerCase().replace(/[-_.\s]/g, "");
-        if (/^(?:name|key|header|headername|label)$/.test(descriptorKey)) {
+        var descriptorKeys = getBoundedMetadataKeySamples(value[index]).map(function (key) {
+          return key.toLowerCase().replace(/[-_.\s]/g, "");
+        });
+        if (descriptorKeys.some(function (key) { return /^(?:name|key|header|headername|label)$/.test(key); })) {
           hasSensitiveDescriptorLabel = isSensitiveMetadataKey(value[index + 1]) || hasSensitiveDescriptorLabel;
         }
-        if (/^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(descriptorKey)) {
+        if (descriptorKeys.some(function (key) {
+          return /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(key);
+        })) {
           hasDescriptorValue = true;
         }
       } catch (_) {
@@ -1088,7 +1142,10 @@
 
   function isLikelyRowArray(key, value) {
     if (!Array.isArray(value) || value.length === 0) return false;
-    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|aggregations?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i.test(String(key))) {
+    if (boundedMetadataKeyMatches(
+      key,
+      /(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|aggregations?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i
+    )) {
       return false;
     }
     var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
@@ -1144,9 +1201,10 @@
 
   function getJsonSchemaChildContext(parent, key, value) {
     if (!isPlainObject(value) || !isJsonSchemaShapedObject(parent)) return null;
-    if (/^dependentrequired$/i.test(String(key))) return "dependentRequired";
-    if (/^properties$/i.test(String(key))) return "properties";
-    if (/^(?:\$defs|definitions|patternproperties|dependentschemas)$/i.test(String(key))) return "definitions";
+    var text = getBoundedMetadataKeyPrefix(key);
+    if (/^dependentrequired$/i.test(text)) return "dependentRequired";
+    if (/^properties$/i.test(text)) return "properties";
+    if (/^(?:\$defs|definitions|patternproperties|dependentschemas)$/i.test(text)) return "definitions";
     return null;
   }
 
@@ -1163,7 +1221,7 @@
   }
 
   function isJsonSchemaStructureProperty(parent, key, value) {
-    var text = String(key);
+    var text = getBoundedMetadataKeyPrefix(key);
     if (/^required$/i.test(text) && isNonEmptyStringArray(value)) {
       return isJsonSchemaShapedObject(parent);
     }
@@ -1188,7 +1246,7 @@
   }
 
   function isStructuralScalarMetadataProperty(parent, key, value) {
-    if (!/^(?:value|val)$/i.test(String(key))) return false;
+    if (!/^(?:value|val)$/i.test(getBoundedMetadataKeyPrefix(key))) return false;
     if (value !== null && (typeof value === "object" || typeof value === "function")) return false;
     var label;
     try {
@@ -1216,11 +1274,17 @@
           return hasSensitiveName || hasAssociatedValue;
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        var normalizedKey = String(key).toLowerCase().replace(/[-_.\s]/g, "");
-        if (/^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(normalizedKey)) {
+        var normalizedKeys = getBoundedMetadataKeySamples(key).map(function (sample) {
+          return sample.toLowerCase().replace(/[-_.\s]/g, "");
+        });
+        if (normalizedKeys.some(function (sample) {
+          return /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(sample);
+        })) {
           hasAssociatedValue = true;
         }
-        if (!/^(?:name|key|header|headername|label)$/.test(normalizedKey)) continue;
+        if (!normalizedKeys.some(function (sample) {
+          return /^(?:name|key|header|headername|label)$/.test(sample);
+        })) continue;
         try {
           if (isSensitiveMetadataKey(value[key])) hasSensitiveName = true;
         } catch (_) {
@@ -1247,12 +1311,16 @@
           return Boolean(keyType || hasPrivateMember || hasSymmetricKey);
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        var normalizedKey = String(key).toLowerCase();
-        if (normalizedKey === "kty") {
+        var normalizedKeys = getBoundedMetadataKeySamples(key).map(function (sample) {
+          return sample.toLowerCase();
+        });
+        if (normalizedKeys.indexOf("kty") >= 0) {
           keyType = String(value[key]).toLowerCase();
-        } else if (/^(?:d|p|q|dp|dq|qi|oth)$/.test(normalizedKey)) {
+        } else if (normalizedKeys.some(function (sample) {
+          return /^(?:d|p|q|dp|dq|qi|oth)$/.test(sample);
+        })) {
           hasPrivateMember = true;
-        } else if (normalizedKey === "k") {
+        } else if (normalizedKeys.indexOf("k") >= 0) {
           hasSymmetricKey = true;
         }
       }
@@ -1280,7 +1348,7 @@
           break;
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        if (isSensitiveMetadataKey(key) || isSensitiveMetadataString(String(key))) continue;
+        if (isSensitiveMetadataInspectionKey(key)) continue;
         if (keys.length >= CONFIG.METADATA_MAX_OBJECT_KEYS) {
           truncated = true;
           break;
@@ -1322,7 +1390,7 @@
 
   function truncateMetadataKey(key) {
     var text = String(key);
-    if (isSensitiveMetadataString(text)) return "[已省略可能包含凭证的键]";
+    if (isSensitiveMetadataInspectionKey(key)) return "[已省略可能包含凭证的键]";
     return text.length > CONFIG.METADATA_MAX_KEY_CHARS
       ? text.slice(0, CONFIG.METADATA_MAX_KEY_CHARS) + "...[键已截断]"
       : text;
