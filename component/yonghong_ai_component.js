@@ -744,7 +744,7 @@
       isSensitiveMetadataAssignment(inspectionSample) ||
       isSensitiveMetadataAssignment(normalizedUrlSample) ||
       isSensitiveWhitespaceMetadataAssignment(inspectionSample) ||
-      isSensitiveMetadataXml(inspectionSample) ||
+      isSensitiveMetadataXml(inspectionSample, value.length > sample.length) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(inspectionSample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@]+@/i.test(normalizedUrlSample) ||
@@ -780,10 +780,10 @@
   }
 
   function isSensitiveWhitespaceMetadataAssignment(sample) {
-    return /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+[^\s"'`;]{4,}/i.test(sample);
+    return /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+(?:["'][^\r\n]{1,}|[^\s"'`;]{4,})/i.test(sample);
   }
 
-  function isSensitiveMetadataXml(sample) {
+  function isSensitiveMetadataXml(sample, truncated) {
     var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|pass|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
@@ -799,6 +799,14 @@
       ) {
         return true;
       }
+    }
+    var incompleteTagStart = sample.lastIndexOf("<");
+    if (
+      truncated &&
+      incompleteTagStart > sample.lastIndexOf(">") &&
+      /\b(?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(sample.slice(incompleteTagStart))
+    ) {
+      return true;
     }
     return false;
   }
