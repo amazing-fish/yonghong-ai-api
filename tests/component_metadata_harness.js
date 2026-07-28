@@ -186,6 +186,8 @@ async function main() {
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
+      serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
+      serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
     },
     fieldMeta,
@@ -328,6 +330,8 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
@@ -466,6 +470,8 @@ async function main() {
     "OPAQUE_DOUBLE_ENCODED_URL_PASSWORD",
     "OPAQUE_GENERIC_QUERY_TOKEN",
     "OPAQUE_GENERIC_JSON_TOKEN",
+    "OPAQUE_CAMEL_QUERY_TOKEN",
+    "OPAQUE_CAMEL_JSON_TOKEN",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
