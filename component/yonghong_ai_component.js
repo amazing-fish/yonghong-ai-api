@@ -974,7 +974,7 @@
       var tag = tagMatch[0];
       var labelMatch = tag.match(/\b(?:name|key|header|label)\s*=\s*["']([^"']+)["']/i);
       if (labelMatch && isSensitiveMetadataKey(labelMatch[1])) {
-        if (/\b(?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(tag)) {
+        if (/\b(?:value|values|val|data|content|text|defaults?|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(tag)) {
           return true;
         }
         hasSensitiveAttributeLabel = true;
@@ -990,11 +990,11 @@
         break;
       }
     }
-    var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\b[^>]*>/i.test(sample);
+    var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text|defaults?|default[-_.]?value)\b[^>]*>/i.test(sample);
     if ((hasSensitiveAttributeLabel || hasSensitiveElementLabel) && hasElementValue) return true;
     if (
       truncated &&
-      /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\s*>\s*[^<]*$/i.test(sample)
+      /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text|defaults?|default[-_.]?value)\s*>\s*[^<]*$/i.test(sample)
     ) {
       return true;
     }
@@ -1002,7 +1002,7 @@
     if (
       truncated &&
       incompleteTagStart > sample.lastIndexOf(">") &&
-      /\b(?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(sample.slice(incompleteTagStart))
+      /\b(?:value|values|val|data|content|text|defaults?|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(sample.slice(incompleteTagStart))
     ) {
       return true;
     }
@@ -1020,7 +1020,7 @@
         break;
       }
     }
-    var hasAssociatedValue = /["']?(?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']?\s*:/i.test(sample);
+    var hasAssociatedValue = /["']?(?:value|values|val|data|content|text|header[-_.]?value|defaults?|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']?\s*:/i.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
@@ -1038,7 +1038,7 @@
         break;
       }
     }
-    var hasAssociatedValue = /(?:^|[\r\n])\s*(?:-\s*)?(?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*:\s*\S+/i.test(sample);
+    var hasAssociatedValue = /(?:^|[\r\n])\s*(?:-\s*)?(?:value|values|val|data|content|text|header[-_.]?value|defaults?|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*:\s*\S+/i.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
@@ -1054,8 +1054,8 @@
         (/^(?:name|key|header|headername|label)$/.test(firstKey) && isSensitiveMetadataKey(flattenedMatch[2])) ||
         (/^(?:name|key|header|headername|label)$/.test(secondKey) && isSensitiveMetadataKey(flattenedMatch[4]));
       var hasAssociatedValue =
-        /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(firstKey) ||
-        /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(secondKey);
+        /^(?:value|values|val|data|content|text|headervalue|defaults?|defaultvalue|currentvalue|rawvalue)$/.test(firstKey) ||
+        /^(?:value|values|val|data|content|text|headervalue|defaults?|defaultvalue|currentvalue|rawvalue)$/.test(secondKey);
       if (hasSensitiveLabel && hasAssociatedValue) return true;
     }
     if (truncated) {
@@ -1068,8 +1068,8 @@
           (/^(?:name|key|header|headername|label)$/.test(firstTruncatedKey) && isSensitiveMetadataKey(truncatedFlattenedMatch[2])) ||
           (/^(?:name|key|header|headername|label)$/.test(secondTruncatedKey) && isSensitiveMetadataKey(truncatedFlattenedMatch[4]));
         var hasTruncatedValueSlot =
-          /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(firstTruncatedKey) ||
-          /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(secondTruncatedKey);
+          /^(?:value|values|val|data|content|text|headervalue|defaults?|defaultvalue|currentvalue|rawvalue)$/.test(firstTruncatedKey) ||
+          /^(?:value|values|val|data|content|text|headervalue|defaults?|defaultvalue|currentvalue|rawvalue)$/.test(secondTruncatedKey);
         if (hasTruncatedSensitiveLabel && hasTruncatedValueSlot) return true;
       }
     }
@@ -1122,15 +1122,10 @@
     for (var index = 0; index + 1 < visibleLength; index += 2) {
       try {
         if (isSensitiveMetadataKey(value[index])) return true;
-        var descriptorKeys = getBoundedMetadataKeySamples(value[index]).map(function (key) {
-          return key.toLowerCase().replace(/[-_.\s]/g, "");
-        });
-        if (descriptorKeys.some(function (key) { return /^(?:name|key|header|headername|label)$/.test(key); })) {
+        if (isMetadataDescriptorLabelKey(value[index])) {
           hasSensitiveDescriptorLabel = isSensitiveMetadataKey(value[index + 1]) || hasSensitiveDescriptorLabel;
         }
-        if (descriptorKeys.some(function (key) {
-          return /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(key);
-        })) {
+        if (isMetadataDescriptorValueKey(value[index])) {
           hasDescriptorValue = true;
         }
       } catch (_) {
@@ -1246,21 +1241,36 @@
   }
 
   function isStructuralScalarMetadataProperty(parent, key, value) {
-    if (!/^(?:value|val)$/i.test(getBoundedMetadataKeyPrefix(key))) return false;
+    if (!isMetadataDescriptorValueKey(key)) return false;
     if (value !== null && (typeof value === "object" || typeof value === "function")) return false;
-    var label;
+    var scanned = 0;
     try {
-      if (Object.prototype.hasOwnProperty.call(parent, "label")) {
-        label = parent.label;
-      } else if (Object.prototype.hasOwnProperty.call(parent, "name")) {
-        label = parent.name;
-      } else {
-        return false;
+      for (var parentKey in parent) {
+        scanned += 1;
+        if (scanned > CONFIG.METADATA_MAX_SCANNED_OBJECT_KEYS) return false;
+        if (!Object.prototype.hasOwnProperty.call(parent, parentKey)) continue;
+        if (!isMetadataDescriptorLabelKey(parentKey)) continue;
+        var label = parent[parentKey];
+        return typeof label === "string" && !isSensitiveMetadataKey(label);
       }
-      return typeof label === "string" && !isSensitiveMetadataKey(label);
     } catch (_) {
       return false;
     }
+    return false;
+  }
+
+  function isMetadataDescriptorLabelKey(key) {
+    return getBoundedMetadataKeySamples(key).some(function (sample) {
+      var normalized = sample.toLowerCase().replace(/[-_.\s]/g, "");
+      return /^(?:name|key|header|headername|label)$/.test(normalized);
+    });
+  }
+
+  function isMetadataDescriptorValueKey(key) {
+    return getBoundedMetadataKeySamples(key).some(function (sample) {
+      var normalized = sample.toLowerCase().replace(/[-_.\s]/g, "");
+      return /^(?:value|values|val|data|content|text|headervalue|defaults?|defaultvalue|currentvalue|rawvalue)$/.test(normalized);
+    });
   }
 
   function isSensitiveNamedValueDescriptor(value) {
@@ -1274,17 +1284,10 @@
           return hasSensitiveName || hasAssociatedValue;
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        var normalizedKeys = getBoundedMetadataKeySamples(key).map(function (sample) {
-          return sample.toLowerCase().replace(/[-_.\s]/g, "");
-        });
-        if (normalizedKeys.some(function (sample) {
-          return /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(sample);
-        })) {
+        if (isMetadataDescriptorValueKey(key)) {
           hasAssociatedValue = true;
         }
-        if (!normalizedKeys.some(function (sample) {
-          return /^(?:name|key|header|headername|label)$/.test(sample);
-        })) continue;
+        if (!isMetadataDescriptorLabelKey(key)) continue;
         try {
           if (isSensitiveMetadataKey(value[key])) hasSensitiveName = true;
         } catch (_) {
