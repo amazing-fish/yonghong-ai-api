@@ -178,6 +178,10 @@ async function main() {
       fallbackDate,
       primaryDate,
     },
+    downloadMeta: {
+      azureUrl: "https://example.com/blob?sv=2024-11-04&sig=OPAQUE_AZURE_SAS_SIGNATURE",
+      awsUrl: "https://example.com/object?X-Amz-Credential=OPAQUE_AWS_CREDENTIAL&X-Amz-Signature=OPAQUE_AWS_SIGNATURE",
+    },
     fieldMeta,
     hugeMeta,
     qinfo: {
@@ -277,6 +281,7 @@ async function main() {
     diagnostic.metadataCandidateKeys,
     [
       "dateMeta",
+      "downloadMeta",
       "fieldMeta",
       collisionOutputKey,
       `${collisionOutputKey}#2`,
@@ -310,6 +315,8 @@ async function main() {
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.match(diagnostic.metadata.dateMeta.primaryDate, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.dateMeta.fallbackDate, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.azureUrl, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.awsUrl, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
@@ -439,6 +446,9 @@ async function main() {
     "OPAQUE_REDIS_PASSWORD",
     "OPAQUE_DATE_ISO_TOKEN",
     "OPAQUE_DATE_FALLBACK_PASSWORD",
+    "OPAQUE_AZURE_SAS_SIGNATURE",
+    "OPAQUE_AWS_CREDENTIAL",
+    "OPAQUE_AWS_SIGNATURE",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
