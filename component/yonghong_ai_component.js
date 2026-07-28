@@ -698,7 +698,10 @@
         if (!consumeMetadataChars(budget, outputKey.length)) return;
         try {
           var childValue = value[key];
-          if (isNestedRowDataKey(key) || isLikelyRowArray(key, childValue)) {
+          if (
+            (isNestedRowDataKey(key) && !isJsonSchemaItemsProperty(value, key, childValue)) ||
+            isLikelyRowArray(key, childValue)
+          ) {
             result[outputKey] = describeOmittedRowData(childValue);
           } else {
             result[outputKey] = summarizeMetadataValue(childValue, depth + 1, seen, budget);
@@ -906,6 +909,23 @@
       if (inspected >= 3) break;
     }
     return hasScalarValue;
+  }
+
+  function isJsonSchemaItemsProperty(parent, key, value) {
+    if (!/^items$/i.test(String(key)) || !isPlainObject(value)) return false;
+    try {
+      if (typeof parent.type === "string") {
+        return parent.type.toLowerCase() === "array";
+      }
+      if (Array.isArray(parent.type)) {
+        return parent.type.some(function (type) {
+          return typeof type === "string" && type.toLowerCase() === "array";
+        });
+      }
+    } catch (_) {
+      return false;
+    }
+    return false;
   }
 
   function isSensitiveNamedValueDescriptor(value) {
