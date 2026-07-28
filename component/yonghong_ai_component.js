@@ -606,6 +606,7 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
+    if (/^(?:dimension|hierarchy|level)members?(?:list|items|collections?)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
     if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|items?|values?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
