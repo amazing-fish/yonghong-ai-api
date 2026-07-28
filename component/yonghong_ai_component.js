@@ -640,9 +640,9 @@
 
   function hasSensitiveMetadataKeyAlias(text) {
     return (
-      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes))?$/i.test(text) ||
-      /(?:tls|ssl)[-_.]?key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes))?$/i.test(text) ||
-      /client[-_.]?(?:cert|key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes))?)$/i.test(text) ||
+      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
+      /(?:tls|ssl)[-_.]?key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?$/i.test(text) ||
+      /client[-_.]?(?:cert|key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes|map|lookup|index|dictionary|dict|by[a-z0-9]+))?)$/i.test(text) ||
       /key[-_.]?store$/i.test(text) ||
       /webhook(?:[-_.]?(?:url|uri|endpoint))?$/i.test(text) ||
       /shared[-_.]?access(?:[-_.]?signature)?$/i.test(text) ||
@@ -726,7 +726,13 @@
         try {
           var childValue = value[key];
           var preserveDependentRequired = schemaContext === "dependentRequired" && isNonEmptyStringArray(childValue);
-          var preserveSchemaStructure = preserveDependentRequired || isJsonSchemaStructureProperty(value, key, childValue);
+          var preserveSchemaProperty =
+            schemaContext === "properties" &&
+            (isPlainObject(childValue) || typeof childValue === "boolean");
+          var preserveSchemaStructure =
+            preserveDependentRequired ||
+            preserveSchemaProperty ||
+            isJsonSchemaStructureProperty(value, key, childValue);
           var preserveStructuralScalar = isStructuralScalarMetadataProperty(value, key, childValue);
           if (
             !preserveSchemaStructure &&
@@ -1084,8 +1090,10 @@
   }
 
   function getJsonSchemaChildContext(parent, key, value) {
-    if (!/^dependentrequired$/i.test(String(key)) || !isPlainObject(value)) return null;
-    return isJsonSchemaShapedObject(parent) ? "dependentRequired" : null;
+    if (!isPlainObject(value) || !isJsonSchemaShapedObject(parent)) return null;
+    if (/^dependentrequired$/i.test(String(key))) return "dependentRequired";
+    if (/^properties$/i.test(String(key))) return "properties";
+    return null;
   }
 
   function isJsonSchemaStructureProperty(parent, key, value) {
