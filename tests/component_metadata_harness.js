@@ -223,6 +223,8 @@ async function main() {
       phpHeaderText: "PHPSESSID=OPAQUE_PHP_SESSION_ID",
       aspHeaderText: "ASP.NET_SessionId=OPAQUE_ASP_SESSION_ID",
       connectHeaderText: "connect.sid=OPAQUE_CONNECT_SESSION_ID",
+      packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
+      registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
@@ -403,6 +405,8 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.phpHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.aspHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.connectHeaderText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.packageSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
@@ -581,6 +585,8 @@ async function main() {
     "OPAQUE_PHP_SESSION_ID",
     "OPAQUE_ASP_SESSION_ID",
     "OPAQUE_CONNECT_SESSION_ID",
+    "OPAQUE_NPM_AUTH_VALUE",
+    "OPAQUE_DOCKER_AUTH_VALUE",
     "OPAQUE_SYMMETRIC_JWK_KEY",
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
