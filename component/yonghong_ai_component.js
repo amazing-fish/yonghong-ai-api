@@ -712,8 +712,8 @@
     return (
       /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key|client[-_]?secret|secret)\b["']?\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
-      /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\b/i.test(sample) ||
-      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]+:[^\/\s@]+@/i.test(sample) ||
+      /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
+      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]+@/i.test(sample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
@@ -754,7 +754,9 @@
     try {
       for (var key in value) {
         scanned += 1;
-        if (scanned > CONFIG.METADATA_MAX_SCANNED_OBJECT_KEYS) break;
+        if (scanned > CONFIG.METADATA_MAX_SCANNED_OBJECT_KEYS) {
+          return hasSensitiveName || hasAssociatedValue;
+        }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
         var normalizedKey = String(key).toLowerCase();
         if (/^(?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)$/.test(normalizedKey)) {
