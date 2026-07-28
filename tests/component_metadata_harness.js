@@ -117,6 +117,10 @@ async function main() {
         data: {type: "string"},
       },
     },
+    keyValueDescriptor: {
+      key: "role",
+      value: "dimension",
+    },
     [oversizedNestedSensitiveKey]: "OPAQUE_OVERSIZED_NESTED_KEY_TOKEN",
     cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
@@ -357,8 +361,8 @@ async function main() {
       rowsByUuid: {row_1: {customer: "SECRET_ROWS_BY_UUID_VALUE"}},
       rowsByIndex: {0: {customer: "SECRET_ROWS_BY_INDEX_VALUE"}},
       defaultDescriptor: {
-        name: "password",
-        default_value: "OPAQUE_DEFAULT_VALUE_DESCRIPTOR",
+        name: "API Key",
+        default: "OPAQUE_DEFAULT_VALUE_DESCRIPTOR",
       },
       rawDescriptor: {
         name: "password",
@@ -714,6 +718,8 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.items[0].type, "string");
   assert.strictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.items[1], false);
   assert.strictEqual(diagnostic.metadata.fieldMeta.referenceSchema.$defs.data.type, "string");
+  assert.strictEqual(diagnostic.metadata.fieldMeta.keyValueDescriptor.key, "role");
+  assert.strictEqual(diagnostic.metadata.fieldMeta.keyValueDescriptor.value, "dimension");
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.deepStrictEqual(
