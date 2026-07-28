@@ -207,6 +207,7 @@ async function main() {
         YHBISESSIONID: "OPAQUE_YONGHONG_SESSION",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
+        consumerKey: "OPAQUE_OAUTH_CONSUMER_KEY",
         keyStore: "OPAQUE_PKCS12_BASE64",
         oauthCredentials: "OPAQUE_OAUTH_CREDENTIALS",
         passwordHash: "OPAQUE_PASSWORD_HASH",
@@ -515,6 +516,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "YHBISESSIONID"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "consumerKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "oauthCredentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordHash"));
