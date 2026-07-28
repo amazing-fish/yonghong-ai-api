@@ -90,6 +90,15 @@ async function main() {
   };
   fieldMeta.self = fieldMeta;
 
+  let schemaMeta = "leaf";
+  for (let depth = 0; depth < 4; depth += 1) {
+    const level = {};
+    for (let index = 0; index < 30; index += 1) {
+      level[`branch_${depth}_${index}`] = schemaMeta;
+    }
+    schemaMeta = level;
+  }
+
   global.$container = "metadata-harness-component";
   global.options = {
     data: [{column1: "SECRET_ROW_VALUE"}],
@@ -102,6 +111,9 @@ async function main() {
     },
     auth: "SECRET_AUTH",
     sessionToken: "SECRET_TOP_LEVEL_TOKEN",
+    queryData: [{name: "SECRET_QUERY_ROW"}],
+    metadataRows: [{name: "SECRET_METADATA_ROW"}],
+    schemaMeta,
     renderHelper() {},
     chartElement: {nodeType: 1, nodeName: "DIV"},
   };
@@ -112,7 +124,8 @@ async function main() {
   assert.ok(clipboardText, "diagnostic should be copied");
   const diagnostic = JSON.parse(clipboardText);
 
-  assert.deepStrictEqual(diagnostic.metadataCandidateKeys, ["fieldMeta", "qinfo"]);
+  assert.deepStrictEqual(diagnostic.metadataCandidateKeys, ["fieldMeta", "qinfo", "schemaMeta"]);
+  assert.deepStrictEqual(diagnostic.omittedRowCandidateKeys, ["metadataRows", "queryData"]);
   assert.deepStrictEqual(diagnostic.boundSources, ["column1"]);
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
@@ -123,6 +136,8 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.rows, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
+  assert.strictEqual(diagnostic.budget.exhausted, true);
+  assert.ok(clipboardText.length <= diagnostic.limits.maxJsonChars);
 
   [
     "SECRET_ROW_VALUE",
@@ -133,6 +148,8 @@ async function main() {
     "SECRET_SAMPLE",
     "SECRET_TOP_LEVEL_TOKEN",
     "SECRET_AUTH",
+    "SECRET_QUERY_ROW",
+    "SECRET_METADATA_ROW",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
