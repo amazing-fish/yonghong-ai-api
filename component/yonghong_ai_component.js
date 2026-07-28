@@ -626,6 +626,7 @@
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Tokens?|Secrets?|Passwords?|Passwds?|Pwds?|Passphrases?|Credentials?|SessionIds?|Cookies?)$/.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:string|value|text|data|blob|bytes|base64)$/i.test(text) ||
+      /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:map|lookup|index|dictionary|dict|by[a-z0-9]+)$/i.test(text) ||
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
@@ -885,6 +886,12 @@
     }
     var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\s*>\s*[^<]+/i.test(sample);
     if (hasSensitiveElementLabel && hasElementValue) return true;
+    if (
+      truncated &&
+      /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\s*>\s*[^<]*$/i.test(sample)
+    ) {
+      return true;
+    }
     var incompleteTagStart = sample.lastIndexOf("<");
     if (
       truncated &&
