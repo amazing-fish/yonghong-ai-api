@@ -546,7 +546,15 @@
         }
 
         if (!looksLikeMetadataKey(key)) continue;
-        if (isTopLevelRowDataKey(key)) {
+        var isRowCandidate = isTopLevelRowDataKey(key);
+        if (!isRowCandidate) {
+          try {
+            isRowCandidate = isLikelyRowArray(key, runtime[key]);
+          } catch (_) {
+            isRowCandidate = false;
+          }
+        }
+        if (isRowCandidate) {
           if (omittedRowCandidateKeys.length < CONFIG.METADATA_MAX_CANDIDATES) {
             omittedRowCandidateKeys.push(key);
           }
@@ -601,7 +609,7 @@
   }
 
   function isSensitiveMetadataKey(key) {
-    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
+    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
   }
 
   function isNestedRowDataKey(key) {
@@ -656,12 +664,13 @@
         if (budget.exhausted) return;
         var outputKey = truncateMetadataKey(key);
         if (!consumeMetadataChars(budget, outputKey.length)) return;
-        if (isNestedRowDataKey(key)) {
-          result[outputKey] = describeOmittedRowData(value[key]);
-          return;
-        }
         try {
-          result[outputKey] = summarizeMetadataValue(value[key], depth + 1, seen, budget);
+          var childValue = value[key];
+          if (isNestedRowDataKey(key) || isLikelyRowArray(key, childValue)) {
+            result[outputKey] = describeOmittedRowData(childValue);
+          } else {
+            result[outputKey] = summarizeMetadataValue(childValue, depth + 1, seen, budget);
+          }
         } catch (_) {
           result[outputKey] = "[读取失败]";
         }
@@ -701,7 +710,7 @@
   function isSensitiveMetadataString(value) {
     var sample = value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS);
     return (
-      /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|pwd|passphrase|client[-_]?secret|secret)\b["']?\s*[:=]/i.test(sample) ||
+      /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|client[-_]?secret|secret)\b["']?\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]{8,}/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}\b/i.test(sample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]+:[^\/\s@]+@/i.test(sample) ||
@@ -718,6 +727,19 @@
       } catch (_) {
         return true;
       }
+    }
+    return false;
+  }
+
+  function isLikelyRowArray(key, value) {
+    if (!Array.isArray(value) || value.length === 0) return false;
+    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?)/i.test(String(key))) {
+      return false;
+    }
+    var visibleLength = Math.min(value.length, 3);
+    for (var index = 0; index < visibleLength; index += 1) {
+      if (value[index] === null || typeof value[index] === "undefined") continue;
+      return isPlainObject(value[index]);
     }
     return false;
   }
