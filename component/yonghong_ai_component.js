@@ -722,24 +722,41 @@
 
   function isSensitiveMetadataString(value) {
     var sample = value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS);
-    var normalizedUrlSample = normalizeMetadataUrlDelimiters(sample);
+    var inspectionSample = normalizeMetadataStringEscapes(sample);
+    var normalizedUrlSample = normalizeMetadataUrlDelimiters(inspectionSample);
     return (
-      isSerializedPrivateJwk(sample, value.length > sample.length) ||
-      isSerializedSensitiveDescriptor(sample, value.length > sample.length) ||
-      isSensitiveMetadataAssignment(sample) ||
+      isSerializedPrivateJwk(inspectionSample, value.length > sample.length) ||
+      isSerializedSensitiveDescriptor(inspectionSample, value.length > sample.length) ||
+      isSensitiveMetadataAssignment(inspectionSample) ||
       isSensitiveMetadataAssignment(normalizedUrlSample) ||
-      isSensitiveMetadataXml(sample) ||
-      /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
-      /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
-      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]+@/i.test(normalizedUrlSample) ||
+      isSensitiveMetadataXml(inspectionSample) ||
+      /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(inspectionSample) ||
+      /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
+      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@]+@/i.test(normalizedUrlSample) ||
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]{32,}$/i.test(normalizedUrlSample)
       ) ||
       /[?&](?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
-      /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
-      /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(sample)
+      /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(inspectionSample) ||
+      /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(inspectionSample)
     );
+  }
+
+  function normalizeMetadataStringEscapes(value) {
+    var result = value;
+    for (var pass = 0; pass < 3; pass += 1) {
+      var normalized = result
+        .replace(/\\u0022/gi, "\"")
+        .replace(/\\u0027/gi, "'")
+        .replace(/\\u003a/gi, ":")
+        .replace(/\\u003d/gi, "=")
+        .replace(/\\u005c/gi, "\\")
+        .replace(/\\(["'\\])/g, "$1");
+      if (normalized === result) break;
+      result = normalized;
+    }
+    return result;
   }
 
   function isSensitiveMetadataAssignment(sample) {
