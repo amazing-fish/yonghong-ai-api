@@ -724,6 +724,7 @@
     var sample = value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS);
     var normalizedUrlSample = normalizeMetadataUrlDelimiters(sample);
     return (
+      isSerializedPrivateJwk(sample, value.length > sample.length) ||
       /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|(?:auth(?:entication)?|oauth|access|refresh|id|session|csrf|xsrf|security|delegation|identity)?[-_]?token|session[-_]?id|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key|client[-_]?secret|secret)\b["']?\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
@@ -736,6 +737,20 @@
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
+  }
+
+  function isSerializedPrivateJwk(sample, truncated) {
+    if (!/\{\s*["']/.test(sample)) return false;
+    var keyTypeMatch = sample.match(/["']kty["']\s*:\s*["'](rsa|ec|okp|oct)["']/i);
+    var hasPrivateMember = /["'](?:d|p|q|dp|dq|qi|oth)["']\s*:/.test(sample);
+    var hasSymmetricKey = /["']k["']\s*:/.test(sample);
+
+    if (keyTypeMatch) {
+      var keyType = keyTypeMatch[1].toLowerCase();
+      if (keyType === "oct" && hasSymmetricKey) return true;
+      if (keyType !== "oct" && hasPrivateMember) return true;
+    }
+    return truncated && Boolean(keyTypeMatch || hasPrivateMember || hasSymmetricKey);
   }
 
   function normalizeMetadataUrlDelimiters(value) {
