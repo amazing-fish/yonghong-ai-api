@@ -607,6 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
+    if (/^(?:rows?|records?)(?:map|byid|bykey|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
     return /(?:data|datasets?|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
@@ -815,7 +816,7 @@
 
   function isSerializedSensitiveDescriptor(sample, truncated) {
     if (!/\{\s*["']/.test(sample)) return false;
-    var labelPattern = /["'](?:name|key|header|label)["']\s*:\s*["']([^"']+)["']/gi;
+    var labelPattern = /["'](?:name|key|header|header[-_.]?name|label)["']\s*:\s*["']([^"']+)["']/gi;
     var labelMatch;
     var hasSensitiveLabel = false;
     while ((labelMatch = labelPattern.exec(sample)) !== null) {
@@ -824,7 +825,7 @@
         break;
       }
     }
-    var hasAssociatedValue = /["'](?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']\s*:/.test(sample);
+    var hasAssociatedValue = /["'](?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']\s*:/i.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
