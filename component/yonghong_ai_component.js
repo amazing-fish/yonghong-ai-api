@@ -600,7 +600,7 @@
   }
 
   function looksLikeMetadataKey(key) {
-    return /field|column|meta|label|name|alias|dimension|measure|metric|aggregate|formula|expression|calc|query|qinfo|header|schema|binding|bind|role|type|definition|function|choice|enum|categor/i.test(String(key));
+    return /field|column|meta|label|name|alias|dimension|measure|metric|aggregat|formula|expression|calc|query|qinfo|header|schema|binding|bind|role|type|definition|function|choice|enum|categor/i.test(String(key));
   }
 
   function isTopLevelRowDataKey(key) {
@@ -608,7 +608,7 @@
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
-    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
+    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|items?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
     if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
@@ -616,7 +616,7 @@
   }
 
   function isStructuralMetadataCollectionKey(key) {
-    return /^(?:fields?|columns?|headers?|schemas?|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)(?:list|items|collections?)$/i.test(String(key));
+    return /^(?:fields?|columns?|headers?|schemas?|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|aggregations?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)(?:list|items|collections?)$/i.test(String(key));
   }
 
   function isSensitiveMetadataKey(key) {
@@ -917,7 +917,7 @@
 
   function isLikelyRowArray(key, value) {
     if (!Array.isArray(value) || value.length === 0) return false;
-    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i.test(String(key))) {
+    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|aggregations?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i.test(String(key))) {
       return false;
     }
     var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
@@ -935,6 +935,24 @@
 
   function isJsonSchemaStructureProperty(parent, key, value) {
     var text = String(key);
+    if (/^required$/i.test(text) && Array.isArray(value)) {
+      var requiredLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
+      var hasRequiredName = false;
+      for (var requiredIndex = 0; requiredIndex < requiredLength; requiredIndex += 1) {
+        if (typeof value[requiredIndex] !== "string") return false;
+        hasRequiredName = true;
+      }
+      if (!hasRequiredName) return false;
+      try {
+        return (
+          (typeof parent.type === "string" && /^(?:object|array)$/i.test(parent.type)) ||
+          isPlainObject(parent.properties) ||
+          isPlainObject(parent.items)
+        );
+      } catch (_) {
+        return false;
+      }
+    }
     if (/^(?:oneof|anyof|allof|prefixitems)$/i.test(text) && Array.isArray(value)) {
       var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
       var hasSchema = false;
