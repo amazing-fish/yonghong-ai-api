@@ -258,6 +258,8 @@ async function main() {
         "current-value": "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
       },
       mapsEndpoint: "https://maps.googleapis.com/maps/api/geocode/json?key=OPAQUE_MAPS_API_KEY",
+      queryResultMap: {row_2: {customer: "SECRET_QUERY_RESULT_MAP_VALUE"}},
+      queryResultsByUuid: {row_1: {customer: "SECRET_QUERY_RESULTS_BY_UUID_VALUE"}},
       rowsByUuid: {row_1: {customer: "SECRET_ROWS_BY_UUID_VALUE"}},
       rowsByIndex: {0: {customer: "SECRET_ROWS_BY_INDEX_VALUE"}},
       defaultDescriptor: {
@@ -511,6 +513,8 @@ async function main() {
   assert.match(diagnostic.metadata.cryptoMeta.curlProxyCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.curlProxyShortCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.mapsEndpoint, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.cryptoMeta.queryResultMap, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.cryptoMeta.queryResultsByUuid, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.rowsByUuid, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.rowsByIndex, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.defaultDescriptor, /已省略敏感名称\/值描述符/);
