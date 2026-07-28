@@ -896,6 +896,12 @@
     var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|pass|webhook(?:[-_.]?(?:url|uri|endpoint))?|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
+    var directElementPattern = /<\s*(?:[a-z0-9_.-]+:)?([a-z_][a-z0-9_.-]{0,120})\b[^>]*>\s*[^<]+/gi;
+    var directElementMatch;
+    while ((directElementMatch = directElementPattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(directElementMatch[1])) return true;
+    }
+
     var tagPattern = /<[^>]*>/g;
     var tagMatch;
     while ((tagMatch = tagPattern.exec(sample)) !== null) {
