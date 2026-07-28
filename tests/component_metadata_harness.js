@@ -187,6 +187,9 @@ async function main() {
         p: "OPAQUE_PRIVATE_JWK_PRIME",
         q: "OPAQUE_PRIVATE_JWK_SECOND_PRIME",
       },
+      serializedPrivate: "{\"kty\":\"RSA\",\"d\":\"OPAQUE_SERIALIZED_JWK_EXPONENT\"}",
+      serializedPublic: "{\"kty\":\"RSA\",\"n\":\"PUBLIC_SERIALIZED_MODULUS\",\"e\":\"AQAB\"}",
+      serializedSymmetric: "{\"kty\":\"oct\",\"k\":\"OPAQUE_SERIALIZED_JWK_KEY\"}",
       verificationJwk: {
         kty: "RSA",
         n: "PUBLIC_VERIFICATION_MODULUS",
@@ -343,6 +346,12 @@ async function main() {
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
+  assert.match(diagnostic.metadata.cryptoMeta.serializedPrivate, /已省略可能包含凭证的字符串/);
+  assert.strictEqual(
+    diagnostic.metadata.cryptoMeta.serializedPublic,
+    "{\"kty\":\"RSA\",\"n\":\"PUBLIC_SERIALIZED_MODULUS\",\"e\":\"AQAB\"}",
+  );
+  assert.match(diagnostic.metadata.cryptoMeta.serializedSymmetric, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.verificationJwk.kty, "RSA");
   assert.strictEqual(diagnostic.metadata.cryptoMeta.verificationJwk.n, "PUBLIC_VERIFICATION_MODULUS");
   assert.match(diagnostic.metadata.dateMeta.primaryDate, /已省略可能包含凭证的字符串/);
@@ -500,6 +509,8 @@ async function main() {
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
     "OPAQUE_PRIVATE_JWK_SECOND_PRIME",
+    "OPAQUE_SERIALIZED_JWK_EXPONENT",
+    "OPAQUE_SERIALIZED_JWK_KEY",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
