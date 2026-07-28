@@ -606,7 +606,7 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
-    if (/^(?:(?:dimension|hierarchy|level))?members?(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
+    if (/^(?:(?:dimension|hierarchy|level))?members?(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
     if (/^(?:query(?:data|rows?|records?|results?|resultsets?|responses?|outputs?)?|data|rows?|records?|results?|resultsets?|responses?|outputs?)(?:cache|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
@@ -1024,14 +1024,23 @@
 
   function isSensitiveNameValueTuple(value) {
     var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
+    var hasSensitiveDescriptorLabel = false;
+    var hasDescriptorValue = false;
     for (var index = 0; index + 1 < visibleLength; index += 2) {
       try {
         if (isSensitiveMetadataKey(value[index])) return true;
+        var descriptorKey = String(value[index]).toLowerCase().replace(/[-_.\s]/g, "");
+        if (/^(?:name|key|header|headername|label)$/.test(descriptorKey)) {
+          hasSensitiveDescriptorLabel = isSensitiveMetadataKey(value[index + 1]) || hasSensitiveDescriptorLabel;
+        }
+        if (/^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(descriptorKey)) {
+          hasDescriptorValue = true;
+        }
       } catch (_) {
         return true;
       }
     }
-    return false;
+    return hasSensitiveDescriptorLabel && hasDescriptorValue;
   }
 
   function isLikelyRowArray(key, value) {
