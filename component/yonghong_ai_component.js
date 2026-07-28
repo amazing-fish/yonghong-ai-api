@@ -531,12 +531,12 @@
 
     try {
       for (var key in runtime) {
-        if (!Object.prototype.hasOwnProperty.call(runtime, key)) continue;
         scanned += 1;
         if (scanned > CONFIG.METADATA_MAX_SCANNED_OPTION_KEYS) {
           scanTruncated = true;
           break;
         }
+        if (!Object.prototype.hasOwnProperty.call(runtime, key)) continue;
         if (isSensitiveMetadataKey(key)) continue;
 
         if (optionKeys.length < CONFIG.METADATA_MAX_OPTION_KEYS) {
@@ -741,7 +741,7 @@
     for (var index = 0; index < visibleLength; index += 1) {
       if (value[index] === null || typeof value[index] === "undefined") continue;
       inspected += 1;
-      if (isPlainObject(value[index])) return true;
+      if (isPlainObject(value[index]) || Array.isArray(value[index])) return true;
       if (inspected >= 3) break;
     }
     return false;
@@ -776,12 +776,12 @@
 
     try {
       for (var key in value) {
-        if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
         scanned += 1;
         if (scanned > CONFIG.METADATA_MAX_SCANNED_OBJECT_KEYS) {
           truncated = true;
           break;
         }
+        if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
         if (isSensitiveMetadataKey(key)) continue;
         if (keys.length >= CONFIG.METADATA_MAX_OBJECT_KEYS) {
           truncated = true;
