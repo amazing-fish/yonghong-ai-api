@@ -87,6 +87,10 @@ async function main() {
         name: "jwt",
         value: "SECRET_DESCRIPTOR_JWT",
       },
+      {
+        name: "Authorization",
+        val: "OPAQUE_VAL_SECRET",
+      },
     ],
     rows: [{name: "SECRET_NESTED_ROW"}],
     longLabel: "x".repeat(600),
@@ -139,6 +143,11 @@ async function main() {
       passwd: "OPAQUE_PASSWD_VALUE",
       passphrase: "OPAQUE_PASSPHRASE_VALUE",
       note: "eyJhbGciOiJIUzI1NiJ9.eyJzZWNyZXQiOiJTRUNSRVRfUkFXX0pXVCJ9.signature123",
+      connection: "UID=user;PWD=OPAQUE_CONNECTION_SECRET",
+      recordList: [{name: "SECRET_NESTED_RECORD_LIST"}],
+      fieldItems: [{name: "SECRET_NESTED_FIELD_ITEMS"}],
+      numericPrecision: 10n ** 10000n,
+      marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
       queryData: [{name: "SECRET_NESTED_QUERY_ROW"}],
@@ -148,6 +157,7 @@ async function main() {
     auth: "SECRET_AUTH",
     sessionToken: "SECRET_TOP_LEVEL_TOKEN",
     queryData: [{name: "SECRET_QUERY_ROW"}],
+    queryList: [{name: "SECRET_QUERY_LIST"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
@@ -166,7 +176,7 @@ async function main() {
     diagnostic.metadataCandidateKeys,
     ["fieldMeta", "headers", "hugeMeta", "qinfo", "schemaMeta"],
   );
-  assert.deepStrictEqual(diagnostic.omittedRowCandidateKeys, ["metadataRows", "queryData"]);
+  assert.deepStrictEqual(diagnostic.omittedRowCandidateKeys, ["metadataRows", "queryData", "queryList"]);
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
   assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
   assert.strictEqual(diagnostic.optionKeyScan.scanTruncated, false);
@@ -182,6 +192,7 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.longLabel, /已截断/);
   assert.match(diagnostic.metadata.fieldMeta.rows, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.fields[1], /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.fieldMeta.fields[2], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.queryData, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.metadataRows, /已省略潜在行数据/);
@@ -193,6 +204,11 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.headerLines[0], /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.headerLines[1], /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.note, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.connection, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.recordList, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.fieldItems, /已省略潜在行数据/);
+  assert.strictEqual(diagnostic.metadata.qinfo.numericPrecision, "[已省略 BigInt]");
+  assert.strictEqual(diagnostic.metadata.qinfo.marker, "[已省略 Symbol]");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "jwt"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "pwd"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passwd"));
@@ -231,9 +247,15 @@ async function main() {
     "SECRET_DESCRIPTOR_JWT",
     "SECRET_JWT_KEY",
     "SECRET_RAW_JWT",
+    "OPAQUE_VAL_SECRET",
     "OPAQUE_PWD_VALUE",
     "OPAQUE_PASSWD_VALUE",
     "OPAQUE_PASSPHRASE_VALUE",
+    "OPAQUE_CONNECTION_SECRET",
+    "SECRET_QUERY_LIST",
+    "SECRET_NESTED_RECORD_LIST",
+    "SECRET_NESTED_FIELD_ITEMS",
+    "SECRET_SYMBOL_DESCRIPTION",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
