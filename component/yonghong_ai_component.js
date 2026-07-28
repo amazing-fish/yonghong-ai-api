@@ -630,6 +630,13 @@
     if (typeof value === "string") {
       return summarizeMetadataString(value, budget);
     }
+    if (value !== null && typeof value === "object") {
+      try {
+        return summarizeMetadataString(String.prototype.valueOf.call(value), budget);
+      } catch (_) {
+        // Continue with ordinary object handling when this is not a boxed String.
+      }
+    }
     if (typeof value === "undefined") return "[已省略 undefined]";
     if (typeof value === "function") return "[已省略函数]";
     if (typeof value === "symbol") return summarizeMetadataString("[已省略 Symbol]", budget);
@@ -735,6 +742,7 @@
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(inspectionSample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@]+@/i.test(normalizedUrlSample) ||
+      hasLiteralMetadataUrlUserinfo(value) ||
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]{32,}$/i.test(normalizedUrlSample)
@@ -743,6 +751,23 @@
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(inspectionSample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(inspectionSample)
     );
+  }
+
+  function hasLiteralMetadataUrlUserinfo(value) {
+    var slashes = value.indexOf("//");
+    if (slashes < 0) return false;
+    var authorityStart = slashes + 2;
+    var at = value.indexOf("@", authorityStart);
+    if (at <= authorityStart) return false;
+    var separators = ["/", "?", "#"];
+    for (var index = 0; index < separators.length; index += 1) {
+      var separator = value.indexOf(separators[index], authorityStart);
+      if (separator >= 0 && separator < at) return false;
+    }
+    for (var charIndex = authorityStart; charIndex < at; charIndex += 1) {
+      if (/\s/.test(value.charAt(charIndex))) return false;
+    }
+    return true;
   }
 
   function normalizeMetadataStringEscapes(value) {
