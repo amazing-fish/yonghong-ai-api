@@ -215,6 +215,7 @@ async function main() {
         oauthCredentials: "OPAQUE_OAUTH_CREDENTIALS",
         passwordHash: "OPAQUE_PASSWORD_HASH",
         passwordString: "OPAQUE_PASSWORD_STRING",
+        privateKeyString: "OPAQUE_PRIVATE_KEY_STRING",
         secretKey: "OPAQUE_OBJECT_SECRET_KEY",
         secrets: "OPAQUE_SECRETS_BLOB",
         sessionId: "OPAQUE_SESSION_ID",
@@ -358,7 +359,7 @@ async function main() {
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
       xmlCamelDescriptor: "<property name=\"dbPassword\" value=\"OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD\"/>",
       xmlCamelElement: "<tlsKey>OPAQUE_XML_TLS_KEY</tlsKey>",
-      xmlKeyElement: "<consumerKey>OPAQUE_XML_CONSUMER_KEY</consumerKey>",
+      xmlKeyElement: "<consumerKey><![CDATA[OPAQUE_XML_CONSUMER_KEY]]></consumerKey>",
       xmlReversedDescriptor: "<property value=\"OPAQUE_XML_REVERSED_DESCRIPTOR_PASSWORD\" name=\"password\"/>",
       xmlTruncatedDescriptor: `<property><value>OPAQUE_TRUNCATED_XML_PASSWORD${"x".repeat(600)}</value><name>password</name></property>`,
       xmlText: "<privateKeyData>OPAQUE_XML_PRIVATE_KEY_DATA</privateKeyData>",
@@ -529,6 +530,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "oauthCredentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordHash"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordString"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "privateKeyString"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secretKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secrets"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "sessionId"));
