@@ -647,6 +647,7 @@
         // Continue with ordinary object handling when this is not a boxed String.
       }
     }
+    if (isArrayBufferView(value)) return "[已省略二进制视图]";
     if (typeof value === "undefined") return "[已省略 undefined]";
     if (typeof value === "function") return "[已省略函数]";
     if (typeof value === "symbol") return summarizeMetadataString("[已省略 Symbol]", budget);
@@ -762,6 +763,14 @@
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@?#]{32,}$/i.test(normalizedUrlSample)
+      ) ||
+      (
+        value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
+        /(?:^|[\s;,])[^:\s@\/]{1,64}:[^@\s\/]{32,}$/i.test(inspectionSample)
+      ) ||
+      (
+        value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
+        /(?:^|[\s;,])(?:jdbc:oracle:thin:)?[^\/\s@:]+\/[^@\s\/]{32,}$/i.test(inspectionSample)
       ) ||
       /[?&](?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(inspectionSample) ||
@@ -1113,6 +1122,18 @@
       typeof value.nodeType === "number" ||
       (typeof value.nodeName === "string" && value.ownerDocument)
     );
+  }
+
+  function isArrayBufferView(value) {
+    try {
+      return (
+        typeof ArrayBuffer !== "undefined" &&
+        typeof ArrayBuffer.isView === "function" &&
+        ArrayBuffer.isView(value)
+      );
+    } catch (_) {
+      return true;
+    }
   }
 
   async function copyTextToClipboard(text) {
