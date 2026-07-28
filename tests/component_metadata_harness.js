@@ -184,7 +184,9 @@ async function main() {
       encodedUrl: "https%3A%2F%2Fexample.com%2Fobject%3FX-Amz-Signature%3DOPAQUE_ENCODED_AWS_SIGNATURE",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
+      endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
+      serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
     },
     fieldMeta,
     hugeMeta,
@@ -324,7 +326,9 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.encodedUrl, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
@@ -460,6 +464,8 @@ async function main() {
     "OPAQUE_ENCODED_AWS_SIGNATURE",
     "OPAQUE_ENCODED_URL_PASSWORD",
     "OPAQUE_DOUBLE_ENCODED_URL_PASSWORD",
+    "OPAQUE_GENERIC_QUERY_TOKEN",
+    "OPAQUE_GENERIC_JSON_TOKEN",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
