@@ -101,6 +101,7 @@ async function main() {
   }
   truncatedDescriptor.name = "Authorization";
 
+  const oversizedNestedSensitiveKey = `${"n".repeat(40000)}accessToken`;
   const fieldMeta = {
     arrayTypeSchema: {
       type: ["array", "null"],
@@ -116,6 +117,7 @@ async function main() {
         data: {type: "string"},
       },
     },
+    [oversizedNestedSensitiveKey]: "OPAQUE_OVERSIZED_NESTED_KEY_TOKEN",
     cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
@@ -191,6 +193,10 @@ async function main() {
   }
   const oversizedSource = `column${"9".repeat(40000)}`;
   runtimeOptions[oversizedSource] = [];
+  const oversizedMetadataKey = `bounded_${"m".repeat(40000)}fieldMeta`;
+  runtimeOptions[oversizedMetadataKey] = {role: "dimension"};
+  const oversizedTopLevelSensitiveKey = `${"t".repeat(40000)}-password`;
+  runtimeOptions[oversizedTopLevelSensitiveKey] = "OPAQUE_OVERSIZED_TOP_LEVEL_KEY_PASSWORD";
   const collisionPrefix = `formula${"x".repeat(130)}`;
   const collisionKeyA = `${collisionPrefix}A`;
   const collisionKeyB = `${collisionPrefix}B`;
@@ -507,6 +513,7 @@ async function main() {
   assert.ok(clipboardText, "diagnostic should be copied");
   const diagnostic = JSON.parse(clipboardText);
   const collisionOutputKey = `${collisionKeyA.slice(0, 120)}...[键已截断]`;
+  const oversizedMetadataOutputKey = `${oversizedMetadataKey.slice(0, 120)}...[键已截断]`;
 
   assert.deepStrictEqual(
     diagnostic.metadataCandidateKeys,
@@ -514,6 +521,7 @@ async function main() {
       "aggregateFunctions",
       "aggregations",
       "authorFieldMetadata",
+      oversizedMetadataOutputKey,
       "configMeta",
       "cryptoMeta",
       "dateMeta",
@@ -531,6 +539,7 @@ async function main() {
       "schemaMeta",
     ],
   );
+  assert.strictEqual(diagnostic.metadata[oversizedMetadataOutputKey].role, "dimension");
   assert.deepStrictEqual(
     diagnostic.omittedRowCandidateKeys,
     [
@@ -931,6 +940,8 @@ async function main() {
     "OPAQUE_SHORT_JWT_SIGNATURE",
     "OPAQUE_LONG_TOKEN_ONLY_USERINFO",
     "OPAQUE_TOKEN_ONLY_USERINFO",
+    "OPAQUE_OVERSIZED_NESTED_KEY_TOKEN",
+    "OPAQUE_OVERSIZED_TOP_LEVEL_KEY_PASSWORD",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
     "SECRET_NESTED_RECORD_METADATA",
