@@ -200,6 +200,7 @@ async function main() {
       serializedConfig: "{\"password\":\"OPAQUE_JSON_PASSWORD\"}",
       storageConnection: "DefaultEndpointsProtocol=https;AccountName=demo;AccountKey=OPAQUE_ACCOUNT_KEY",
       cloudConfig: "AWS_SECRET_ACCESS_KEY=OPAQUE_AWS_SECRET",
+      shortScheme: "Basic dTpw",
       tls: {
         pem: "-----BEGIN OPENSSH PRIVATE KEY-----\nSECRET_PEM_BODY",
         encryptedPem: "-----BEGIN ENCRYPTED PRIVATE KEY-----\nSECRET_ENCRYPTED_PEM_BODY",
@@ -308,6 +309,7 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.serializedConfig, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.storageConnection, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.cloudConfig, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.shortScheme, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.pem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.encryptedPem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.dsaPem, /已省略可能包含凭证的字符串/);
@@ -387,6 +389,7 @@ async function main() {
     "OPAQUE_ACCOUNT_KEY",
     "OPAQUE_AWS_SECRET",
     "OPAQUE_SUBSCRIPTION_KEY",
+    "Basic dTpw",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
