@@ -218,6 +218,7 @@ async function main() {
         YHBISESSIONID: "OPAQUE_YONGHONG_SESSION",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         MAILPASS: "OPAQUE_UPPERCASE_MAIL_PASS",
+        dbpass: "OPAQUE_LOWERCASE_DB_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
         credentialsById: {primary: "OPAQUE_CREDENTIAL_BY_ID"},
         consumerKey: "OPAQUE_OAUTH_CONSUMER_KEY",
@@ -241,6 +242,9 @@ async function main() {
         },
         definitions: {
           records: {type: "object"},
+        },
+        dependentSchemas: {
+          data: {type: "string"},
         },
         patternProperties: {
           data: {type: "string"},
@@ -546,6 +550,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "YHBISESSIONID"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "MAILPASS"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "dbpass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentialsById"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "consumerKey"));
@@ -565,6 +570,7 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.$defs.data.type, "string");
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.definitions.records.type, "object");
+  assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.dependentSchemas.data.type, "string");
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.patternProperties.data.type, "string");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
   assert.deepStrictEqual(
