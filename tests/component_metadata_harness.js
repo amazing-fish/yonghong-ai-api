@@ -103,6 +103,7 @@ async function main() {
 
   const fieldMeta = {
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
+    dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
     fields: [
       {
         name: "failure_rate",
@@ -200,6 +201,7 @@ async function main() {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         apiKeys: {production: "OPAQUE_API_KEY"},
         authorizationCode: "OPAQUE_AUTHORIZATION_CODE_FIELD",
+        YHBISESSIONID: "OPAQUE_YONGHONG_SESSION",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
         keyStore: "OPAQUE_PKCS12_BASE64",
@@ -501,6 +503,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "apiKeys"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "authorizationCode"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "YHBISESSIONID"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
@@ -614,6 +617,7 @@ async function main() {
   );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.fieldMeta.dimensionMembersById, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.deepStrictEqual(diagnostic.metadata.fieldMeta.choiceDefinitions, [{label: "Enabled", value: "enabled"}]);
   assert.deepStrictEqual(diagnostic.metadata.fieldList, [
