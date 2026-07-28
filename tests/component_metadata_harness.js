@@ -174,6 +174,25 @@ async function main() {
   fallbackDate.toString = () => "redis://:OPAQUE_DATE_FALLBACK_PASSWORD@example.com/0";
 
   Object.assign(runtimeOptions, {
+    cryptoMeta: {
+      backupJwk: {
+        kty: "oct",
+        k: "OPAQUE_SYMMETRIC_JWK_KEY",
+      },
+      signingJwk: {
+        kty: "RSA",
+        n: "PUBLIC_MODULUS",
+        e: "AQAB",
+        d: "OPAQUE_PRIVATE_JWK_EXPONENT",
+        p: "OPAQUE_PRIVATE_JWK_PRIME",
+        q: "OPAQUE_PRIVATE_JWK_SECOND_PRIME",
+      },
+      verificationJwk: {
+        kty: "RSA",
+        n: "PUBLIC_VERIFICATION_MODULUS",
+        e: "AQAB",
+      },
+    },
     dateMeta: {
       fallbackDate,
       primaryDate,
@@ -288,6 +307,7 @@ async function main() {
   assert.deepStrictEqual(
     diagnostic.metadataCandidateKeys,
     [
+      "cryptoMeta",
       "dateMeta",
       "downloadMeta",
       "fieldMeta",
@@ -321,6 +341,10 @@ async function main() {
   assert.match(diagnostic.boundSources[1], /\[键已截断\]$/);
   assert.ok(diagnostic.boundSources[1].length < 200);
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
+  assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
+  assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.verificationJwk.kty, "RSA");
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.verificationJwk.n, "PUBLIC_VERIFICATION_MODULUS");
   assert.match(diagnostic.metadata.dateMeta.primaryDate, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.dateMeta.fallbackDate, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.azureUrl, /已省略可能包含凭证的字符串/);
@@ -472,6 +496,10 @@ async function main() {
     "OPAQUE_GENERIC_JSON_TOKEN",
     "OPAQUE_CAMEL_QUERY_TOKEN",
     "OPAQUE_CAMEL_JSON_TOKEN",
+    "OPAQUE_SYMMETRIC_JWK_KEY",
+    "OPAQUE_PRIVATE_JWK_EXPONENT",
+    "OPAQUE_PRIVATE_JWK_PRIME",
+    "OPAQUE_PRIVATE_JWK_SECOND_PRIME",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
