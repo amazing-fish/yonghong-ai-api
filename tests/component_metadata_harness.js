@@ -256,7 +256,7 @@ async function main() {
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
       netrcSettings: "machine registry.example login build password OPAQUE_NETRC_PASSWORD",
       oracleDsn: "jdbc:oracle:thin:demo/OPAQUE_ORACLE_DSN_PASSWORD@db.example:1521/service",
-      serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
+      serializedSettings: "{&quot;password&quot;:&quot;OPAQUE_HTML_ENTITY_PASSWORD&quot;}",
       serializedHeaderDescriptor: "{\"headerName\":\"Authorization\",\"headerValue\":\"OPAQUE_SERIALIZED_HEADER_VALUE\"}",
       smtpSettings: "name: DB_PASSWORD\nvalue: OPAQUE_YAML_PASSWORD",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
@@ -295,6 +295,7 @@ async function main() {
       },
       mapsEndpoint: "https://maps.googleapis.com/maps/api/geocode/json?key=OPAQUE_MAPS_API_KEY",
       itemsById: {item_1: {customer: "SECRET_ITEMS_BY_ID_VALUE"}},
+      queryCache: {row_0: {customer: "SECRET_QUERY_CACHE_VALUE"}},
       queryResultMap: {row_2: {customer: "SECRET_QUERY_RESULT_MAP_VALUE"}},
       queryResultsByUuid: {row_1: {customer: "SECRET_QUERY_RESULTS_BY_UUID_VALUE"}},
       queryValuesById: {row_3: {customer: "SECRET_QUERY_VALUES_BY_ID_VALUE"}},
@@ -585,6 +586,7 @@ async function main() {
   assert.match(diagnostic.metadata.cryptoMeta.curlProxyShortCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.mapsEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.itemsById, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.cryptoMeta.queryCache, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryResultMap, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryResultsByUuid, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryValuesById, /已省略潜在行数据/);
