@@ -181,6 +181,11 @@ async function main() {
         kty: "oct",
         k: "OPAQUE_SYMMETRIC_JWK_KEY",
       },
+      clusterConfig: {
+        server: "https://cluster.example.com",
+        "client-key-data": "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
+        clientKeyData: "OPAQUE_CAMEL_KUBECONFIG_CLIENT_KEY_DATA",
+      },
       signingJwk: {
         kty: "RSA",
         n: "PUBLIC_MODULUS",
@@ -192,6 +197,7 @@ async function main() {
       serializedPrivate: "{\"kty\":\"RSA\",\"d\":\"OPAQUE_SERIALIZED_JWK_EXPONENT\"}",
       serializedPublic: "{\"kty\":\"RSA\",\"n\":\"PUBLIC_SERIALIZED_MODULUS\",\"e\":\"AQAB\"}",
       serializedSymmetric: "{\"kty\":\"oct\",\"k\":\"OPAQUE_SERIALIZED_JWK_KEY\"}",
+      serializedKubeConfig: "{\"client-key-data\":\"OPAQUE_SERIALIZED_KUBECONFIG_CLIENT_KEY_DATA\"}",
       verificationJwk: {
         kty: "RSA",
         n: "PUBLIC_VERIFICATION_MODULUS",
@@ -368,6 +374,9 @@ async function main() {
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "clientKeyData"));
   assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.serializedPrivate, /已省略可能包含凭证的字符串/);
   assert.strictEqual(
@@ -375,6 +384,7 @@ async function main() {
     "{\"kty\":\"RSA\",\"n\":\"PUBLIC_SERIALIZED_MODULUS\",\"e\":\"AQAB\"}",
   );
   assert.match(diagnostic.metadata.cryptoMeta.serializedSymmetric, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.cryptoMeta.serializedKubeConfig, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.verificationJwk.kty, "RSA");
   assert.strictEqual(diagnostic.metadata.cryptoMeta.verificationJwk.n, "PUBLIC_VERIFICATION_MODULUS");
   assert.match(diagnostic.metadata.dateMeta.primaryDate, /已省略可能包含凭证的字符串/);
@@ -577,6 +587,9 @@ async function main() {
     "OPAQUE_PRIVATE_JWK_SECOND_PRIME",
     "OPAQUE_SERIALIZED_JWK_EXPONENT",
     "OPAQUE_SERIALIZED_JWK_KEY",
+    "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
+    "OPAQUE_CAMEL_KUBECONFIG_CLIENT_KEY_DATA",
+    "OPAQUE_SERIALIZED_KUBECONFIG_CLIENT_KEY_DATA",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
