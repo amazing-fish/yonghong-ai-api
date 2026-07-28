@@ -199,6 +199,7 @@ async function main() {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         keyStore: "OPAQUE_PKCS12_BASE64",
+        secretKey: "OPAQUE_OBJECT_SECRET_KEY",
         webhookUrl: "https://hooks.slack.com/services/T123/B456/OPAQUE_WEBHOOK_SECRET",
       },
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
@@ -490,6 +491,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secretKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "webhookUrl"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
