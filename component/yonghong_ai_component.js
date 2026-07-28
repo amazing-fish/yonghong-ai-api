@@ -638,6 +638,7 @@
   function hasSensitiveMetadataKeyAlias(text) {
     return (
       /(?:api|access|account|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
+      /(?:tls|ssl)[-_.]?key(?:[-_.]?data)?$/i.test(text) ||
       /client[-_.]?(?:cert|key(?:[-_.]?data)?)$/i.test(text) ||
       /key[-_.]?store$/i.test(text) ||
       /webhook(?:[-_.]?(?:url|uri|endpoint))?$/i.test(text) ||
@@ -656,7 +657,7 @@
     );
   }
 
-  function summarizeMetadataValue(value, depth, seen, budget) {
+  function summarizeMetadataValue(value, depth, seen, budget, schemaContext) {
     if (!consumeMetadataNode(budget)) return "[全局诊断预算已耗尽]";
     if (value === null || typeof value === "boolean" || typeof value === "number") return value;
     if (typeof value === "string") {
@@ -721,7 +722,8 @@
         if (!consumeMetadataChars(budget, outputKey.length)) return;
         try {
           var childValue = value[key];
-          var preserveSchemaStructure = isJsonSchemaStructureProperty(value, key, childValue);
+          var preserveDependentRequired = schemaContext === "dependentRequired" && isNonEmptyStringArray(childValue);
+          var preserveSchemaStructure = preserveDependentRequired || isJsonSchemaStructureProperty(value, key, childValue);
           var preserveStructuralScalar = isStructuralScalarMetadataProperty(value, key, childValue);
           if (
             !preserveSchemaStructure &&
@@ -729,7 +731,13 @@
           ) {
             result[outputKey] = describeOmittedRowData(childValue);
           } else {
-            result[outputKey] = summarizeMetadataValue(childValue, depth + 1, seen, budget);
+            result[outputKey] = summarizeMetadataValue(
+              childValue,
+              preserveDependentRequired ? depth : depth + 1,
+              seen,
+              budget,
+              getJsonSchemaChildContext(value, key, childValue)
+            );
           }
         } catch (_) {
           result[outputKey] = "[读取失败]";
@@ -995,25 +1003,37 @@
     return hasScalarValue;
   }
 
+  function isNonEmptyStringArray(value) {
+    if (!Array.isArray(value) || value.length === 0) return false;
+    var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
+    for (var index = 0; index < visibleLength; index += 1) {
+      if (typeof value[index] !== "string") return false;
+    }
+    return true;
+  }
+
+  function isJsonSchemaShapedObject(value) {
+    try {
+      return (
+        (typeof value.type === "string" && /^(?:object|array)$/i.test(value.type)) ||
+        isPlainObject(value.properties) ||
+        isPlainObject(value.items) ||
+        typeof value.$schema === "string"
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function getJsonSchemaChildContext(parent, key, value) {
+    if (!/^dependentrequired$/i.test(String(key)) || !isPlainObject(value)) return null;
+    return isJsonSchemaShapedObject(parent) ? "dependentRequired" : null;
+  }
+
   function isJsonSchemaStructureProperty(parent, key, value) {
     var text = String(key);
-    if (/^required$/i.test(text) && Array.isArray(value)) {
-      var requiredLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
-      var hasRequiredName = false;
-      for (var requiredIndex = 0; requiredIndex < requiredLength; requiredIndex += 1) {
-        if (typeof value[requiredIndex] !== "string") return false;
-        hasRequiredName = true;
-      }
-      if (!hasRequiredName) return false;
-      try {
-        return (
-          (typeof parent.type === "string" && /^(?:object|array)$/i.test(parent.type)) ||
-          isPlainObject(parent.properties) ||
-          isPlainObject(parent.items)
-        );
-      } catch (_) {
-        return false;
-      }
+    if (/^required$/i.test(text) && isNonEmptyStringArray(value)) {
+      return isJsonSchemaShapedObject(parent);
     }
     if (/^(?:oneof|anyof|allof|prefixitems)$/i.test(text) && Array.isArray(value)) {
       var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
