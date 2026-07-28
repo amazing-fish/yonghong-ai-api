@@ -212,6 +212,7 @@ async function main() {
       recordMetadataByKey: {row_6: {customer: "SECRET_RECORD_METADATA_BY_KEY_VALUE"}},
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
+      rowMetadataCollection: [{customer: "SECRET_ROW_METADATA_COLLECTION_VALUE"}],
       rowMap: {row_1: {customer: "SECRET_ROW_MAP_VALUE"}},
       rowDataById: {row_5: {customer: "SECRET_ROW_DATA_BY_ID_VALUE"}},
       rowMetadataById: {row_7: {customer: "SECRET_ROW_METADATA_BY_ID_VALUE"}},
@@ -245,6 +246,8 @@ async function main() {
         ],
       },
       curlCommand: "curl -u demo:OPAQUE_CURL_PASSWORD https://example.com",
+      curlProxyCommand: "curl --proxy-user demo:OPAQUE_CURL_PROXY_PASSWORD https://example.com",
+      curlProxyShortCommand: "curl -U demo:OPAQUE_CURL_PROXY_SHORT_PASSWORD https://example.com",
       connectionOptions: {
         user: "demo",
         pass: "OPAQUE_OBJECT_PASS_VALUE",
@@ -290,6 +293,7 @@ async function main() {
       awsUrl: "https://example.com/object?X-Amz-Credential=OPAQUE_AWS_CREDENTIAL&X-Amz-Signature=OPAQUE_AWS_SIGNATURE",
       encodedUrl: "https%3A%2F%2Fexample.com%2Fobject%3FX-Amz-Signature%3DOPAQUE_ENCODED_AWS_SIGNATURE",
       encodedEndpointText: "https%3A%2F%2Fexample.com%2Fapi%3Ftoken%3DOPAQUE_ENCODED_GENERIC_TOKEN",
+      encodedParameterName: "https://example.com/cb?access%5Ftoken=OPAQUE_ENCODED_PARAMETER_NAME_TOKEN",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
@@ -475,6 +479,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.recordMetadataByKey, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.configMeta.rowMetadataCollection, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.rowMap, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.rowDataById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.rowMetadataById, /已省略潜在行数据/);
@@ -500,6 +505,8 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.connectionOptions, "pass"));
   assert.match(diagnostic.metadata.cryptoMeta.currentDescriptor, /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.cryptoMeta.curlCommand, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.cryptoMeta.curlProxyCommand, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.cryptoMeta.curlProxyShortCommand, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.mapsEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.rowsByIndex, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.defaultDescriptor, /已省略敏感名称\/值描述符/);
@@ -520,6 +527,7 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.awsUrl, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUrl, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedEndpointText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.encodedParameterName, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
