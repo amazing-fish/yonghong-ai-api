@@ -607,6 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:(?:dimension|hierarchy|level))?members?(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
+    if (/^(?:query|data|rows?|records?|results?|resultsets?|responses?|outputs?)(?:cache|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
     if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|items?|values?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
@@ -818,6 +819,29 @@
     var result = value;
     for (var pass = 0; pass < 3; pass += 1) {
       var normalized = result
+        .replace(/&#(?:x([0-9a-f]{1,6})|([0-9]{1,7}));/gi, function (entity, hex, decimal) {
+          var code = parseInt(hex || decimal, hex ? 16 : 10);
+          return code >= 0 && code <= 127 ? String.fromCharCode(code) : entity;
+        })
+        .replace(/&(quot|apos|colon|equals|amp|lt|gt|sol|quest|num|percnt|lowbar|hyphen|period);/gi, function (_, name) {
+          var entities = {
+            quot: "\"",
+            apos: "'",
+            colon: ":",
+            equals: "=",
+            amp: "&",
+            lt: "<",
+            gt: ">",
+            sol: "/",
+            quest: "?",
+            num: "#",
+            percnt: "%",
+            lowbar: "_",
+            hyphen: "-",
+            period: "."
+          };
+          return entities[name.toLowerCase()];
+        })
         .replace(/\\u([0-9a-f]{4})/gi, function (_, hex) {
           return String.fromCharCode(parseInt(hex, 16));
         })
