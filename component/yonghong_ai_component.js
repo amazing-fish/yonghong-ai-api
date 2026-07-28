@@ -607,7 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:(?:dimension|hierarchy|level))?members?(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
-    if (/^(?:dimension|hierarchy|level)values?(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
+    if (/^(?:dimension|hierarchy|level)(?:values?|nodes?)(?:(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)|(?:caches?|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?)?$/i.test(compactText)) return true;
     if (/^(?:query(?:data|rows?|records?|results?|resultsets?|responses?|outputs?)?|data|rows?|records?|results?|resultsets?|responses?|outputs?)(?:cache|cached)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
@@ -626,6 +626,7 @@
     var text = String(key);
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
+      /^[A-Z][A-Z0-9]{0,120}PASS$/.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Tokens?|Secrets?|Passwords?|Passwds?|Pwds?|Passphrases?|Credentials?|SessionIds?|Cookies?)$/.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:string|value|text|data|blob|bytes|base64)$/i.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:map|lookup|index|dictionary|dict|by[a-z0-9]+)$/i.test(text) ||
