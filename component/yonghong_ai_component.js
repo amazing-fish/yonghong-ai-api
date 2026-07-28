@@ -624,7 +624,7 @@
     var text = String(key);
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
-      /^[A-Za-z][A-Za-z0-9]*(?:Token|Secret|Password|Passwd|Pwd|Passphrase|Credential|SessionId|Cookie)$/.test(text) ||
+      /^[A-Za-z][A-Za-z0-9]*(?:Tokens?|Secrets?|Passwords?|Passwds?|Pwds?|Passphrases?|Credentials?|SessionIds?|Cookies?)$/.test(text) ||
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
