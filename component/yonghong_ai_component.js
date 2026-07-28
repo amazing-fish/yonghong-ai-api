@@ -630,6 +630,7 @@
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:map|lookup|index|dictionary|dict|by[a-z0-9]+)$/i.test(text) ||
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
+      /^(?:set[-_.]?)?cookies?[-_.]?headers?$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
       /^(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)$/i.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
@@ -727,7 +728,7 @@
           var childValue = value[key];
           var preserveDependentRequired = schemaContext === "dependentRequired" && isNonEmptyStringArray(childValue);
           var preserveSchemaProperty =
-            schemaContext === "properties" &&
+            (schemaContext === "properties" || schemaContext === "definitions") &&
             (isPlainObject(childValue) || typeof childValue === "boolean");
           var preserveSchemaStructure =
             preserveDependentRequired ||
@@ -1093,6 +1094,7 @@
     if (!isPlainObject(value) || !isJsonSchemaShapedObject(parent)) return null;
     if (/^dependentrequired$/i.test(String(key))) return "dependentRequired";
     if (/^properties$/i.test(String(key))) return "properties";
+    if (/^(?:\$defs|definitions)$/i.test(String(key))) return "definitions";
     return null;
   }
 
