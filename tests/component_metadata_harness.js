@@ -102,6 +102,10 @@ async function main() {
   truncatedDescriptor.name = "Authorization";
 
   const fieldMeta = {
+    arrayTypeSchema: {
+      type: ["object", "null"],
+      required: ["id"],
+    },
     cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
@@ -219,6 +223,8 @@ async function main() {
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         MAILPASS: "OPAQUE_UPPERCASE_MAIL_PASS",
         dbpass: "OPAQUE_LOWERCASE_DB_PASS",
+        clientsecret: "OPAQUE_LOWERCASE_CLIENT_SECRET",
+        ACCESSTOKEN: "OPAQUE_UPPERCASE_ACCESS_TOKEN",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
         credentialsById: {primary: "OPAQUE_CREDENTIAL_BY_ID"},
         consumerKey: "OPAQUE_OAUTH_CONSUMER_KEY",
@@ -551,6 +557,8 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "MAILPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "dbpass"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "clientsecret"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "ACCESSTOKEN"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentialsById"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "consumerKey"));
@@ -672,6 +680,7 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.xmlReversedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlTruncatedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
+  assert.deepStrictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.required, ["id"]);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.deepStrictEqual(
