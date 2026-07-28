@@ -607,7 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
-    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|byid|bykey|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
+    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|byid|bykey|byindex|byposition|byordinal|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
     if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|byid|bykey)?$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
@@ -701,7 +701,11 @@
         try {
           var childValue = value[key];
           var preserveSchemaStructure = isJsonSchemaStructureProperty(value, key, childValue);
-          if (!preserveSchemaStructure && (isNestedRowDataKey(key) || isLikelyRowArray(key, childValue))) {
+          var preserveStructuralScalar = isStructuralScalarMetadataProperty(value, key, childValue);
+          if (
+            !preserveSchemaStructure &&
+            ((isNestedRowDataKey(key) && !preserveStructuralScalar) || isLikelyRowArray(key, childValue))
+          ) {
             result[outputKey] = describeOmittedRowData(childValue);
           } else {
             result[outputKey] = summarizeMetadataValue(childValue, depth + 1, seen, budget);
@@ -801,7 +805,10 @@
   }
 
   function isSensitiveWhitespaceMetadataAssignment(sample) {
-    return /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+(?:["'][^\r\n]{1,}|[^\s"'`;]{4,})/i.test(sample);
+    return (
+      /(?:^|\s)(?:-u|--user)\s+(?:["'][^"'\r\n]*:[^"'\r\n]+["']|[^\s"'`:]+:[^\s"'`;]+)/i.test(sample) ||
+      /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+(?:["'][^\r\n]{1,}|[^\s"'`;]{4,})/i.test(sample)
+    );
   }
 
   function isSensitiveMetadataXml(sample, truncated) {
@@ -945,6 +952,24 @@
       return false;
     }
     return false;
+  }
+
+  function isStructuralScalarMetadataProperty(parent, key, value) {
+    if (!/^(?:value|val)$/i.test(String(key))) return false;
+    if (value !== null && (typeof value === "object" || typeof value === "function")) return false;
+    var label;
+    try {
+      if (Object.prototype.hasOwnProperty.call(parent, "label")) {
+        label = parent.label;
+      } else if (Object.prototype.hasOwnProperty.call(parent, "name")) {
+        label = parent.name;
+      } else {
+        return false;
+      }
+      return typeof label === "string" && !isSensitiveMetadataKey(label);
+    } catch (_) {
+      return false;
+    }
   }
 
   function isSensitiveNamedValueDescriptor(value) {
