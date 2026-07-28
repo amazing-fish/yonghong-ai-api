@@ -610,7 +610,7 @@
   }
 
   function isSensitiveMetadataKey(key) {
-    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|client.?key(?:.?data)?|private.?key|csrf/i.test(String(key));
+    return /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|client.?key(?:.?data)?|private.?key|csrf/i.test(String(key));
   }
 
   function isNestedRowDataKey(key) {
@@ -743,11 +743,11 @@
   }
 
   function isSensitiveMetadataAssignment(sample) {
-    return /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
+    return /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
   }
 
   function isSensitiveMetadataXml(sample) {
-    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
+    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|pass|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
     var tagPattern = /<[^>]*>/g;
@@ -758,7 +758,7 @@
       if (
         labelMatch &&
         isSensitiveMetadataKey(labelMatch[1]) &&
-        /\b(?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)\s*=\s*["'][^"']+/i.test(tag)
+        /\b(?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(tag)
       ) {
         return true;
       }
@@ -777,7 +777,7 @@
         break;
       }
     }
-    var hasAssociatedValue = /["'](?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)["']\s*:/.test(sample);
+    var hasAssociatedValue = /["'](?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']\s*:/.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
@@ -854,7 +854,7 @@
           return hasSensitiveName || hasAssociatedValue;
         }
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        var normalizedKey = String(key).toLowerCase();
+        var normalizedKey = String(key).toLowerCase().replace(/[-_.\s]/g, "");
         if (/^(?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)$/.test(normalizedKey)) {
           hasAssociatedValue = true;
         }
