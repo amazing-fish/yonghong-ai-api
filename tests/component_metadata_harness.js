@@ -197,6 +197,8 @@ async function main() {
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       mailSettings: {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
+        apiKeys: {production: "OPAQUE_API_KEY"},
+        authorizationCode: "OPAQUE_AUTHORIZATION_CODE_FIELD",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
         keyStore: "OPAQUE_PKCS12_BASE64",
@@ -496,6 +498,8 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "apiKeys"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "authorizationCode"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
