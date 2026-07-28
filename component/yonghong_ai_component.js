@@ -640,9 +640,9 @@
 
   function hasSensitiveMetadataKeyAlias(text) {
     return (
-      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
-      /(?:tls|ssl)[-_.]?key(?:[-_.]?data)?$/i.test(text) ||
-      /client[-_.]?(?:cert|key(?:[-_.]?data)?)$/i.test(text) ||
+      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes))?$/i.test(text) ||
+      /(?:tls|ssl)[-_.]?key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes))?$/i.test(text) ||
+      /client[-_.]?(?:cert|key(?:[-_.]?(?:data|id|value|pem|base64|string|text|blob|bytes))?)$/i.test(text) ||
       /key[-_.]?store$/i.test(text) ||
       /webhook(?:[-_.]?(?:url|uri|endpoint))?$/i.test(text) ||
       /shared[-_.]?access(?:[-_.]?signature)?$/i.test(text) ||
@@ -896,7 +896,7 @@
     var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|pass|webhook(?:[-_.]?(?:url|uri|endpoint))?|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
-    var directElementPattern = /<\s*(?:[a-z0-9_.-]+:)?([a-z_][a-z0-9_.-]{0,120})\b[^>]*>\s*[^<]+/gi;
+    var directElementPattern = /<\s*(?:[a-z0-9_.-]+:)?([a-z_][a-z0-9_.-]{0,120})\b[^>]*>/gi;
     var directElementMatch;
     while ((directElementMatch = directElementPattern.exec(sample)) !== null) {
       if (isSensitiveMetadataKey(directElementMatch[1])) return true;
