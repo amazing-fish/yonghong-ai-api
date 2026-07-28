@@ -119,6 +119,9 @@ async function main() {
       headers: [{name: "failure_rate", type: "double"}],
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
+      queryData: [{name: "SECRET_NESTED_QUERY_ROW"}],
+      metadataRows: [{name: "SECRET_NESTED_METADATA_ROW"}],
+      fieldData: [{name: "SECRET_NESTED_FIELD_ROW"}],
     },
     auth: "SECRET_AUTH",
     sessionToken: "SECRET_TOP_LEVEL_TOKEN",
@@ -153,6 +156,9 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.longLabel, /已截断/);
   assert.match(diagnostic.metadata.fieldMeta.rows, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.queryData, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.metadataRows, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.fieldData, /已省略潜在行数据/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
   assert.strictEqual(
@@ -173,6 +179,9 @@ async function main() {
     "SECRET_AUTH",
     "SECRET_QUERY_ROW",
     "SECRET_METADATA_ROW",
+    "SECRET_NESTED_QUERY_ROW",
+    "SECRET_NESTED_METADATA_ROW",
+    "SECRET_NESTED_FIELD_ROW",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
