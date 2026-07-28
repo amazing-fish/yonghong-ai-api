@@ -197,10 +197,13 @@ async function main() {
       quotedCommandSettings: "--password \"OPAQUE_QUOTED_COMMAND_PASSWORD\"",
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
+      rowMap: {row_1: {customer: "SECRET_ROW_MAP_VALUE"}},
+      rowsById: {row_2: {customer: "SECRET_ROWS_BY_ID_VALUE"}},
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
       netrcSettings: "machine registry.example login build password OPAQUE_NETRC_PASSWORD",
       oracleDsn: "jdbc:oracle:thin:demo/OPAQUE_ORACLE_DSN_PASSWORD@db.example:1521/service",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
+      serializedHeaderDescriptor: "{\"headerName\":\"Authorization\",\"headerValue\":\"OPAQUE_SERIALIZED_HEADER_VALUE\"}",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       subclassedSettings: new (class extends String {})("token=OPAQUE_STRING_SUBCLASS_TOKEN"),
       unicodeEscapedSettings: "{\\u0022password\\u0022\\u003a\\u0022OPAQUE_UNICODE_ESCAPED_PASSWORD\\u0022}",
@@ -435,10 +438,13 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.quotedCommandSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.configMeta.rowMap, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.configMeta.rowsById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.netrcSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.oracleDsn, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serializedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.serializedHeaderDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.subclassedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.unicodeEscapedSettings, /已省略可能包含凭证的字符串/);
@@ -674,6 +680,9 @@ async function main() {
     "OPAQUE_TRUNCATED_XML_PASSWORD",
     "OPAQUE_SERIALIZED_TUPLE_TOKEN",
     "OPAQUE_ORACLE_DSN_PASSWORD",
+    "OPAQUE_SERIALIZED_HEADER_VALUE",
+    "SECRET_ROW_MAP_VALUE",
+    "SECRET_ROWS_BY_ID_VALUE",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
