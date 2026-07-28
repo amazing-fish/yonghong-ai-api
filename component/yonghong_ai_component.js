@@ -608,6 +608,7 @@
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|byid|bykey|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
+    if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|byid|bykey)?$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
     return /(?:data|datasets?|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
@@ -699,10 +700,8 @@
         if (!consumeMetadataChars(budget, outputKey.length)) return;
         try {
           var childValue = value[key];
-          if (
-            (isNestedRowDataKey(key) && !isJsonSchemaItemsProperty(value, key, childValue)) ||
-            isLikelyRowArray(key, childValue)
-          ) {
+          var preserveSchemaStructure = isJsonSchemaStructureProperty(value, key, childValue);
+          if (!preserveSchemaStructure && (isNestedRowDataKey(key) || isLikelyRowArray(key, childValue))) {
             result[outputKey] = describeOmittedRowData(childValue);
           } else {
             result[outputKey] = summarizeMetadataValue(childValue, depth + 1, seen, budget);
@@ -772,7 +771,7 @@
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:^|[\s;,])(?:jdbc:oracle:thin:)?[^\/\s@:]+\/[^@\s\/]{32,}$/i.test(inspectionSample)
       ) ||
-      /[?&](?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
+      /[?&](?:key|sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(inspectionSample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(inspectionSample)
     );
@@ -920,8 +919,19 @@
     return hasScalarValue;
   }
 
-  function isJsonSchemaItemsProperty(parent, key, value) {
-    if (!/^items$/i.test(String(key)) || !isPlainObject(value)) return false;
+  function isJsonSchemaStructureProperty(parent, key, value) {
+    var text = String(key);
+    if (/^(?:oneof|anyof|allof|prefixitems)$/i.test(text) && Array.isArray(value)) {
+      var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
+      var hasSchema = false;
+      for (var index = 0; index < visibleLength; index += 1) {
+        if (value[index] === null || typeof value[index] === "undefined") continue;
+        if (!isPlainObject(value[index])) return false;
+        hasSchema = true;
+      }
+      return hasSchema;
+    }
+    if (!/^items$/i.test(text) || !isPlainObject(value)) return false;
     try {
       if (typeof parent.type === "string") {
         return parent.type.toLowerCase() === "array";
