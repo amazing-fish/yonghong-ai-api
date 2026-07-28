@@ -638,6 +638,9 @@
     if (Object.prototype.toString.call(value) === "[object Date]") {
       try { return value.toISOString(); } catch (_) { return String(value); }
     }
+    if (!Array.isArray(value) && isSensitiveNamedValueDescriptor(value)) {
+      return "[已省略敏感名称/值描述符]";
+    }
 
     seen.push(value);
     try {
@@ -677,6 +680,27 @@
     } finally {
       seen.pop();
     }
+  }
+
+  function isSensitiveNamedValueDescriptor(value) {
+    var nameKeys = ["name", "key", "header", "label"];
+    var valueKeys = ["value", "values", "data", "content", "text", "defaultValue", "currentValue", "rawValue"];
+    var hasSensitiveName = false;
+    var hasAssociatedValue = valueKeys.some(function (key) {
+      return Object.prototype.hasOwnProperty.call(value, key);
+    });
+
+    if (!hasAssociatedValue) return false;
+    nameKeys.some(function (key) {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) return false;
+      try {
+        hasSensitiveName = isSensitiveMetadataKey(value[key]);
+      } catch (_) {
+        hasSensitiveName = true;
+      }
+      return hasSensitiveName;
+    });
+    return hasSensitiveName;
   }
 
   function collectBoundedMetadataObjectKeys(value) {
