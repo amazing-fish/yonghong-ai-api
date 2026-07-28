@@ -808,6 +808,10 @@
       /(?:^|[\s;,])(?:jdbc:oracle:thin:)?[^\/\s@:]+\/[^@\s\/]+@(?:\[[^\]]+\]|[a-z0-9_.-]+)(?::\d+)?(?:\/[^\s]*)?/i.test(inspectionSample) ||
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
+        /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@?#:]{1,64}:[^\/\s@?#]+$/i.test(normalizedUrlSample)
+      ) ||
+      (
+        value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@?#]{32,}$/i.test(normalizedUrlSample)
       ) ||
       (
@@ -1117,6 +1121,10 @@
       var hasSchema = false;
       for (var index = 0; index < visibleLength; index += 1) {
         if (value[index] === null || typeof value[index] === "undefined") continue;
+        if (typeof value[index] === "boolean") {
+          hasSchema = true;
+          continue;
+        }
         if (!isPlainObject(value[index])) return false;
         hasSchema = true;
       }
