@@ -106,6 +106,7 @@ async function main() {
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
     dimensionValuesById: {value_1: {caption: "SECRET_DIMENSION_VALUE_BY_ID"}},
+    hierarchyNodesById: {node_1: {caption: "SECRET_HIERARCHY_NODE_BY_ID"}},
     memberCache: {member_3: {caption: "SECRET_MEMBER_CACHE"}},
     memberMap: {member_2: {caption: "SECRET_MEMBER_MAP"}},
     sessionCookie: "SID=OPAQUE_SESSION_COOKIE_VALUE",
@@ -216,6 +217,7 @@ async function main() {
         authorizationCode: "OPAQUE_AUTHORIZATION_CODE_FIELD",
         YHBISESSIONID: "OPAQUE_YONGHONG_SESSION",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
+        MAILPASS: "OPAQUE_UPPERCASE_MAIL_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
         credentialsById: {primary: "OPAQUE_CREDENTIAL_BY_ID"},
         consumerKey: "OPAQUE_OAUTH_CONSUMER_KEY",
@@ -543,6 +545,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "authorizationCode"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "YHBISESSIONID"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "MAILPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentialsById"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "consumerKey"));
@@ -674,6 +677,7 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembersById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.dimensionValuesById, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.fieldMeta.hierarchyNodesById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.memberCache, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.memberMap, /已省略潜在行数据/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.fieldMeta, "sessionCookie"));
