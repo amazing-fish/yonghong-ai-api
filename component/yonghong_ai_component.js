@@ -625,6 +625,7 @@
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Tokens?|Secrets?|Passwords?|Passwds?|Pwds?|Passphrases?|Credentials?|SessionIds?|Cookies?)$/.test(text) ||
+      /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:string|value|text|data|blob|bytes|base64)$/i.test(text) ||
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
