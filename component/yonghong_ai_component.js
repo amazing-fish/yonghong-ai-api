@@ -633,6 +633,7 @@
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^(?:set[-_.]?)?cookies?[-_.]?headers?$/i.test(text) ||
       /^x[-_.]?(?:amz|goog)[-_.]?signature$/i.test(text) ||
+      /^[A-Za-z0-9][A-Za-z0-9_.-]{0,120}[-_.]signature(?:[-_.](?:sha)?\d{1,4})?$/i.test(text) ||
       /^(?:[A-Za-z][A-Za-z0-9]{0,120})?signatures?$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
       /^(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)$/i.test(text) ||
@@ -794,7 +795,7 @@
     var normalizedUrlSample = normalizeMetadataUrlDelimiters(inspectionSample);
     return (
       isSerializedPrivateJwk(inspectionSample, value.length > sample.length) ||
-      isSerializedSensitiveTuple(inspectionSample) ||
+      isSerializedSensitiveTuple(inspectionSample, value.length > sample.length) ||
       isSerializedSensitiveDescriptor(inspectionSample, value.length > sample.length) ||
       isSerializedSensitiveYamlDescriptor(inspectionSample, value.length > sample.length) ||
       isSensitiveMetadataAssignment(inspectionSample) ||
@@ -992,7 +993,7 @@
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
 
-  function isSerializedSensitiveTuple(sample) {
+  function isSerializedSensitiveTuple(sample, truncated) {
     if (!/\[\s*["']/.test(sample)) return false;
     var flattenedPattern = /\[\s*["']([^"']+)["']\s*,\s*["']([^"']*)["']\s*,\s*["']([^"']+)["']\s*,\s*["']([^"']*)["']/g;
     var flattenedMatch;
@@ -1006,6 +1007,21 @@
         /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(firstKey) ||
         /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(secondKey);
       if (hasSensitiveLabel && hasAssociatedValue) return true;
+    }
+    if (truncated) {
+      var truncatedFlattenedPattern = /\[\s*["']([^"']+)["']\s*,\s*["']([^"']*)["']\s*,\s*["']([^"']+)["']\s*,\s*["']([^"']*)$/g;
+      var truncatedFlattenedMatch;
+      while ((truncatedFlattenedMatch = truncatedFlattenedPattern.exec(sample)) !== null) {
+        var firstTruncatedKey = truncatedFlattenedMatch[1].toLowerCase().replace(/[-_.\s]/g, "");
+        var secondTruncatedKey = truncatedFlattenedMatch[3].toLowerCase().replace(/[-_.\s]/g, "");
+        var hasTruncatedSensitiveLabel =
+          (/^(?:name|key|header|headername|label)$/.test(firstTruncatedKey) && isSensitiveMetadataKey(truncatedFlattenedMatch[2])) ||
+          (/^(?:name|key|header|headername|label)$/.test(secondTruncatedKey) && isSensitiveMetadataKey(truncatedFlattenedMatch[4]));
+        var hasTruncatedValueSlot =
+          /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(firstTruncatedKey) ||
+          /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(secondTruncatedKey);
+        if (hasTruncatedSensitiveLabel && hasTruncatedValueSlot) return true;
+      }
     }
     var tuplePattern = /\[\s*["']([^"']+)["']\s*,\s*["'][^"']*/g;
     var tupleMatch;
@@ -1110,6 +1126,15 @@
         ) ||
         isPlainObject(value.properties) ||
         isPlainObject(value.items) ||
+        typeof value.$ref === "string" ||
+        isPlainObject(value.$defs) ||
+        isPlainObject(value.definitions) ||
+        isPlainObject(value.patternProperties) ||
+        isPlainObject(value.dependentSchemas) ||
+        isJsonSchemaArrayOfSchemas(value.oneOf) ||
+        isJsonSchemaArrayOfSchemas(value.anyOf) ||
+        isJsonSchemaArrayOfSchemas(value.allOf) ||
+        isJsonSchemaArrayOfSchemas(value.prefixItems) ||
         typeof value.$schema === "string"
       );
     } catch (_) {
