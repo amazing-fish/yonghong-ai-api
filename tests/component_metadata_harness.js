@@ -102,6 +102,7 @@ async function main() {
   truncatedDescriptor.name = "Authorization";
 
   const fieldMeta = {
+    dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     fields: [
       {
         name: "failure_rate",
@@ -612,6 +613,7 @@ async function main() {
     ["failure_count / total_count", "revenue - cost"],
   );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
+  assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.deepStrictEqual(diagnostic.metadata.fieldMeta.choiceDefinitions, [{label: "Enabled", value: "enabled"}]);
   assert.deepStrictEqual(diagnostic.metadata.fieldList, [
