@@ -200,6 +200,7 @@ async function main() {
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
         keyStore: "OPAQUE_PKCS12_BASE64",
+        passwordHash: "OPAQUE_PASSWORD_HASH",
         secretKey: "OPAQUE_OBJECT_SECRET_KEY",
         secrets: "OPAQUE_SECRETS_BLOB",
         sessionId: "OPAQUE_SESSION_ID",
@@ -214,6 +215,7 @@ async function main() {
           required: ["region"],
           properties: {
             author: {type: "string"},
+            privateKeyboard: {type: "string"},
             region: {type: "string"},
             revenue: {type: "number"},
             secretary: {type: "string"},
@@ -277,6 +279,7 @@ async function main() {
       itemsById: {item_1: {customer: "SECRET_ITEMS_BY_ID_VALUE"}},
       queryResultMap: {row_2: {customer: "SECRET_QUERY_RESULT_MAP_VALUE"}},
       queryResultsByUuid: {row_1: {customer: "SECRET_QUERY_RESULTS_BY_UUID_VALUE"}},
+      queryValuesById: {row_3: {customer: "SECRET_QUERY_VALUES_BY_ID_VALUE"}},
       rowsByUuid: {row_1: {customer: "SECRET_ROWS_BY_UUID_VALUE"}},
       rowsByIndex: {0: {customer: "SECRET_ROWS_BY_INDEX_VALUE"}},
       defaultDescriptor: {
@@ -496,6 +499,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordHash"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secretKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secrets"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "sessionId"));
@@ -505,6 +509,7 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.author, /对象层级已截断/);
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.privateKeyboard, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.revenue, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.secretary, /对象层级已截断/);
@@ -549,6 +554,7 @@ async function main() {
   assert.match(diagnostic.metadata.cryptoMeta.itemsById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryResultMap, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.queryResultsByUuid, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.cryptoMeta.queryValuesById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.rowsByUuid, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.rowsByIndex, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.cryptoMeta.defaultDescriptor, /已省略敏感名称\/值描述符/);
