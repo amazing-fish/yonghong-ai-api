@@ -178,10 +178,12 @@ async function main() {
       queryResponse: [{name: "SECRET_NESTED_QUERY_RESPONSE"}],
       queryOutput: [{name: "SECRET_NESTED_QUERY_OUTPUT"}],
       entries: [{name: "SECRET_NESTED_ENTRIES"}],
+      dataSet: [{region: "SECRET_NESTED_DATASET"}],
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
       endpoint: "https://alice:OPAQUE_URL_CREDENTIAL@example.com/path",
       serializedConfig: "{\"password\":\"OPAQUE_JSON_PASSWORD\"}",
+      storageConnection: "DefaultEndpointsProtocol=https;AccountName=demo;AccountKey=OPAQUE_ACCOUNT_KEY",
       tls: {
         pem: "-----BEGIN OPENSSH PRIVATE KEY-----\nSECRET_PEM_BODY",
         encryptedPem: "-----BEGIN ENCRYPTED PRIVATE KEY-----\nSECRET_ENCRYPTED_PEM_BODY",
@@ -202,6 +204,7 @@ async function main() {
     queryResultSet: [{name: "SECRET_QUERY_RESULT_SET"}],
     queryResponse: [{name: "SECRET_QUERY_RESPONSE"}],
     queryEntries: [{name: "SECRET_QUERY_ENTRIES"}],
+    queryDataset: [{region: "SECRET_QUERY_DATASET"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
@@ -223,7 +226,15 @@ async function main() {
   );
   assert.deepStrictEqual(
     diagnostic.omittedRowCandidateKeys,
-    ["metadataRows", "queryData", "queryEntries", "queryList", "queryResponse", "queryResultSet"],
+    [
+      "metadataRows",
+      "queryData",
+      "queryDataset",
+      "queryEntries",
+      "queryList",
+      "queryResponse",
+      "queryResultSet",
+    ],
   );
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
   assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
@@ -260,10 +271,12 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.queryResponse, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.queryOutput, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.entries, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.dataSet, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.qinfo.numericPrecision, "[已省略 BigInt]");
   assert.strictEqual(diagnostic.metadata.qinfo.marker, "[已省略 Symbol]");
   assert.match(diagnostic.metadata.qinfo.endpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.serializedConfig, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.storageConnection, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.pem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.encryptedPem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.dsaPem, /已省略可能包含凭证的字符串/);
@@ -330,6 +343,9 @@ async function main() {
     "OPAQUE_JSON_PASSWORD",
     "SECRET_NESTED_ENTRIES",
     "SECRET_QUERY_ENTRIES",
+    "SECRET_NESTED_DATASET",
+    "SECRET_QUERY_DATASET",
+    "OPAQUE_ACCOUNT_KEY",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
