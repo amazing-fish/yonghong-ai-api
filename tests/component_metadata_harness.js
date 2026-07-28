@@ -194,6 +194,16 @@ async function main() {
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       mailSettings: {smtpPass: "OPAQUE_CAMEL_SMTP_PASS"},
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
+      jsonSchema: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            region: {type: "string"},
+            revenue: {type: "number"},
+          },
+        },
+      },
       packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
       quotedCommandSettings: "--password \"OPAQUE_QUOTED_COMMAND_PASSWORD\"",
       queryDataById: {row_3: {customer: "SECRET_QUERY_DATA_BY_ID_VALUE"}},
@@ -442,6 +452,9 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
+  assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.revenue, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.quotedCommandSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.queryDataById, /已省略潜在行数据/);
