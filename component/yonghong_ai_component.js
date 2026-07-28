@@ -602,7 +602,8 @@
   function isNestedRowDataKey(key) {
     var text = String(key);
     return (
-      /^(data|rows?|records?|rawdata|sourcedata|rowdata|values?|samples?|examples?|items?|list|results?|payload|content)$/i.test(text) ||
+      isTopLevelRowDataKey(text) ||
+      /^(items?|list)$/i.test(text) ||
       /(?:sample|example|row|record)(?:data|values?)?$/i.test(text)
     );
   }
