@@ -309,6 +309,10 @@ async function main() {
         clientKeyData: "OPAQUE_CAMEL_KUBECONFIG_CLIENT_KEY_DATA",
       },
       compositionSchema: {
+        anyOf: [
+          false,
+          {type: "string"},
+        ],
         oneOf: [
           {type: "object", properties: {region: {type: "string"}}},
           {type: "string"},
@@ -379,7 +383,7 @@ async function main() {
       compactText: "eyJhbGciOiJIUzI1NiJ9.e30.OPAQUE_SHORT_JWT_SIGNATURE",
       longColonlessUserinfo: `https://${"t".repeat(600)}OPAQUE_LONG_TOKEN_ONLY_USERINFO@example.com/path`,
       longSchemeLessDsn: `demo:${"p".repeat(600)}OPAQUE_LONG_DSN_PASSWORD@tcp(db:3306)/app`,
-      longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
+      longUserinfo: `${"x".repeat(475)}https://u:SECRET1234${"p".repeat(100)}@example.com/object`,
       repositoryEndpoint: "https://ghp_OPAQUE_TOKEN_ONLY_USERINFO@github.com/org/repo.git",
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serializedDescriptor: "{name:\"password\",value:\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
@@ -620,6 +624,8 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "clientKeyData"));
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.compositionSchema.anyOf[0], false);
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.compositionSchema.anyOf[1].type, "string");
   assert.strictEqual(diagnostic.metadata.cryptoMeta.compositionSchema.oneOf[0].type, "object");
   assert.strictEqual(diagnostic.metadata.cryptoMeta.compositionSchema.oneOf[1].type, "string");
   assert.strictEqual(diagnostic.metadata.cryptoMeta.connectionOptions.user, "demo");
