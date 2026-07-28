@@ -607,6 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
+    if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
     if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|byid|bykey|byindex|byposition|byordinal|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
     if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|byid|bykey)?$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
@@ -806,7 +807,7 @@
 
   function isSensitiveWhitespaceMetadataAssignment(sample) {
     return (
-      /(?:^|\s)(?:-u|--user)\s+(?:["'][^"'\r\n]*:[^"'\r\n]+["']|[^\s"'`:]+:[^\s"'`;]+)/i.test(sample) ||
+      /(?:^|\s)(?:-u|-U|--user|--proxy-user)\s+(?:["'][^"'\r\n]*:[^"'\r\n]+["']|[^\s"'`:]+:[^\s"'`;]+)/.test(sample) ||
       /(?:^|[\s"'`;])(?:--?)?(?:auth|authorization|pass|password|passwd|pwd|passphrase|token|secret|credential|api[-_]?key|access[-_]?key)\s+(?:["'][^\r\n]{1,}|[^\s"'`;]{4,})/i.test(sample)
     );
   }
@@ -889,7 +890,10 @@
         .replace(/%40/gi, "@")
         .replace(/%3f/gi, "?")
         .replace(/%26/gi, "&")
-        .replace(/%3d/gi, "=");
+        .replace(/%3d/gi, "=")
+        .replace(/%([0-9a-f]{2})/gi, function (_, hex) {
+          return String.fromCharCode(parseInt(hex, 16));
+        });
       if (normalized === result) break;
       result = normalized;
     }
