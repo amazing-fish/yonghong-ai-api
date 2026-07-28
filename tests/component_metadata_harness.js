@@ -193,6 +193,7 @@ async function main() {
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
+      quotedCommandSettings: "--password \"OPAQUE_QUOTED_COMMAND_PASSWORD\"",
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
@@ -276,6 +277,7 @@ async function main() {
       xmlCamelElement: "<dbPassword>OPAQUE_XML_CAMEL_PASSWORD</dbPassword>",
       xmlKeyElement: "<privateKey>OPAQUE_XML_PRIVATE_KEY</privateKey>",
       xmlReversedDescriptor: "<property value=\"OPAQUE_XML_REVERSED_DESCRIPTOR_PASSWORD\" name=\"password\"/>",
+      xmlTruncatedDescriptor: `<property value="OPAQUE_TRUNCATED_XML_PASSWORD" filler="${"x".repeat(600)}" name="password"/>`,
       xmlText: "<connection><password>OPAQUE_XML_PASSWORD</password></connection>",
     },
     fieldMeta,
@@ -425,6 +427,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.quotedCommandSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
@@ -479,6 +482,7 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.xmlKeyElement, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlReversedDescriptor, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlTruncatedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
@@ -659,6 +663,8 @@ async function main() {
     "OPAQUE_HEADER_VALUE_DESCRIPTOR",
     "OPAQUE_COMMAND_PASSWORD",
     "OPAQUE_NETRC_PASSWORD",
+    "OPAQUE_QUOTED_COMMAND_PASSWORD",
+    "OPAQUE_TRUNCATED_XML_PASSWORD",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
