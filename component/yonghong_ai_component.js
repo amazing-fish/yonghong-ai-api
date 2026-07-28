@@ -766,18 +766,20 @@
 
   function isLikelyRowArray(key, value) {
     if (!Array.isArray(value) || value.length === 0) return false;
-    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?)/i.test(String(key))) {
+    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i.test(String(key))) {
       return false;
     }
     var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
     var inspected = 0;
+    var hasScalarValue = false;
     for (var index = 0; index < visibleLength; index += 1) {
       if (value[index] === null || typeof value[index] === "undefined") continue;
       inspected += 1;
       if (isPlainObject(value[index]) || Array.isArray(value[index])) return true;
+      hasScalarValue = true;
       if (inspected >= 3) break;
     }
-    return false;
+    return hasScalarValue;
   }
 
   function isSensitiveNamedValueDescriptor(value) {
