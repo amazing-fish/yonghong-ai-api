@@ -95,6 +95,12 @@ async function main() {
     },
   });
 
+  const truncatedDescriptor = {value: "OPAQUE_TRUNCATED_DESCRIPTOR"};
+  for (let index = 0; index < 205; index += 1) {
+    truncatedDescriptor[`filler_${index}`] = index;
+  }
+  truncatedDescriptor.name = "Authorization";
+
   const fieldMeta = {
     fields: [
       {
@@ -116,6 +122,7 @@ async function main() {
         Key: "Authorization",
         Value: "OPAQUE_DOTNET_DESCRIPTOR",
       },
+      truncatedDescriptor,
     ],
     rows: [{name: "SECRET_NESTED_ROW"}],
     longLabel: "x".repeat(600),
@@ -201,6 +208,8 @@ async function main() {
       storageConnection: "DefaultEndpointsProtocol=https;AccountName=demo;AccountKey=OPAQUE_ACCOUNT_KEY",
       cloudConfig: "AWS_SECRET_ACCESS_KEY=OPAQUE_AWS_SECRET",
       shortScheme: "Basic dTpw",
+      encodedText: `eyJhbGciOiJIUzI1NiJ9.${"a".repeat(600)}.signature123`,
+      redisEndpoint: "redis://:OPAQUE_REDIS_PASSWORD@example.com/0",
       tls: {
         pem: "-----BEGIN OPENSSH PRIVATE KEY-----\nSECRET_PEM_BODY",
         encryptedPem: "-----BEGIN ENCRYPTED PRIVATE KEY-----\nSECRET_ENCRYPTED_PEM_BODY",
@@ -280,6 +289,7 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.fields[1], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.fieldMeta.fields[2], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.fieldMeta.fields[3], /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.fieldMeta.fields[4], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.queryData, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.metadataRows, /已省略潜在行数据/);
@@ -310,6 +320,8 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.storageConnection, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.cloudConfig, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.shortScheme, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.encodedText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.redisEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.pem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.encryptedPem, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.tls.dsaPem, /已省略可能包含凭证的字符串/);
@@ -390,6 +402,8 @@ async function main() {
     "OPAQUE_AWS_SECRET",
     "OPAQUE_SUBSCRIPTION_KEY",
     "Basic dTpw",
+    "OPAQUE_TRUNCATED_DESCRIPTOR",
+    "OPAQUE_REDIS_PASSWORD",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
