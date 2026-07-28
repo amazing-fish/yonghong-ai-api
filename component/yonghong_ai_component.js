@@ -605,7 +605,7 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     if (/metadata$/i.test(text)) return false;
-    return /(?:data|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
+    return /(?:data|datasets?|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
   }
 
   function isSensitiveMetadataKey(key) {
