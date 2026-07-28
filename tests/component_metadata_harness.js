@@ -135,6 +135,9 @@ async function main() {
         "Content-Type: application/json",
       ],
       jwt: "SECRET_JWT_KEY",
+      pwd: "OPAQUE_PWD_VALUE",
+      passwd: "OPAQUE_PASSWD_VALUE",
+      passphrase: "OPAQUE_PASSPHRASE_VALUE",
       note: "eyJhbGciOiJIUzI1NiJ9.eyJzZWNyZXQiOiJTRUNSRVRfUkFXX0pXVCJ9.signature123",
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
@@ -191,6 +194,9 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.headerLines[1], /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.note, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "jwt"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "pwd"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passwd"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passphrase"));
   assert.match(diagnostic.metadata.headers, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
@@ -225,6 +231,9 @@ async function main() {
     "SECRET_DESCRIPTOR_JWT",
     "SECRET_JWT_KEY",
     "SECRET_RAW_JWT",
+    "OPAQUE_PWD_VALUE",
+    "OPAQUE_PASSWD_VALUE",
+    "OPAQUE_PASSPHRASE_VALUE",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
