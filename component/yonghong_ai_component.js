@@ -29,7 +29,13 @@
     METADATA_MAX_DEPTH: 4,
     METADATA_MAX_ARRAY_ITEMS: 5,
     METADATA_MAX_OBJECT_KEYS: 30,
-    METADATA_MAX_STRING_CHARS: 500
+    METADATA_MAX_STRING_CHARS: 500,
+    METADATA_MAX_OPTION_KEYS: 100,
+    METADATA_MAX_CANDIDATES: 20,
+    METADATA_MAX_KEY_CHARS: 120,
+    METADATA_MAX_TOTAL_NODES: 500,
+    METADATA_MAX_TOTAL_CHARS: 24000,
+    METADATA_MAX_JSON_CHARS: 32000
   };
   var SETTINGS_STORAGE_KEY = createSettingsStorageKey();
 
@@ -431,7 +437,7 @@
 
   async function copyMetadataDiagnostics() {
     try {
-      var text = JSON.stringify(buildMetadataDiagnostic(), null, 2);
+      var text = stringifyMetadataDiagnostic(buildMetadataDiagnostic());
       getField("debug").textContent = text;
       var copied = await copyTextToClipboard(text);
       setStatus(copied ? "元数据诊断已复制" : "已生成元数据诊断，请从下方手动复制");
@@ -444,31 +450,61 @@
   function buildMetadataDiagnostic() {
     var runtime = isPlainObject(currentOptions) ? currentOptions : {};
     var optionKeys = getSafeRuntimeOptionKeys();
-    var candidateKeys = optionKeys.filter(isMetadataCandidateKey);
+    var candidateKeys = optionKeys.filter(isMetadataCandidateKey).slice(0, CONFIG.METADATA_MAX_CANDIDATES);
+    var omittedRowCandidateKeys = optionKeys.filter(function (key) {
+      return looksLikeMetadataKey(key) && isTopLevelRowDataKey(key);
+    });
     var metadata = Object.create(null);
+    var budget = {
+      nodes: 0,
+      chars: 0,
+      truncated: false,
+      exhausted: false
+    };
 
     candidateKeys.forEach(function (key) {
+      if (budget.exhausted) return;
       try {
-        metadata[key] = summarizeMetadataValue(runtime[key], 0, []);
+        var outputKey = truncateMetadataKey(key);
+        if (!consumeMetadataChars(budget, outputKey.length)) return;
+        metadata[outputKey] = summarizeMetadataValue(runtime[key], 0, [], budget);
       } catch (_) {
-        metadata[key] = "[读取失败]";
+        metadata[truncateMetadataKey(key)] = "[读取失败]";
       }
     });
 
     return {
       schemaVersion: 1,
-      optionsKeys: optionKeys,
-      metadataCandidateKeys: candidateKeys,
-      boundSources: state.boundFields.map(function (field) { return field.source; }),
-      configuredFields: state.boundFields.map(function (field) {
-        return {source: field.source, name: field.name, role: field.role};
+      optionsKeys: optionKeys.map(truncateMetadataKey),
+      metadataCandidateKeys: candidateKeys.map(truncateMetadataKey),
+      omittedRowCandidateKeys: omittedRowCandidateKeys.map(truncateMetadataKey),
+      boundSources: state.boundFields.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(function (field) {
+        return field.source;
+      }),
+      configuredFields: state.boundFields.slice(0, CONFIG.METADATA_MAX_OPTION_KEYS).map(function (field) {
+        return {
+          source: field.source,
+          name: String(field.name).slice(0, CONFIG.METADATA_MAX_KEY_CHARS),
+          role: field.role
+        };
       }),
       metadata: metadata,
       limits: {
         maxDepth: CONFIG.METADATA_MAX_DEPTH,
         maxArrayItems: CONFIG.METADATA_MAX_ARRAY_ITEMS,
         maxObjectKeys: CONFIG.METADATA_MAX_OBJECT_KEYS,
-        maxStringChars: CONFIG.METADATA_MAX_STRING_CHARS
+        maxStringChars: CONFIG.METADATA_MAX_STRING_CHARS,
+        maxOptionKeys: CONFIG.METADATA_MAX_OPTION_KEYS,
+        maxCandidates: CONFIG.METADATA_MAX_CANDIDATES,
+        maxTotalNodes: CONFIG.METADATA_MAX_TOTAL_NODES,
+        maxTotalChars: CONFIG.METADATA_MAX_TOTAL_CHARS,
+        maxJsonChars: CONFIG.METADATA_MAX_JSON_CHARS
+      },
+      budget: {
+        nodes: budget.nodes,
+        chars: budget.chars,
+        truncated: budget.truncated,
+        exhausted: budget.exhausted
       },
       safety: "未包含 options.data、顶层 columnN 值、函数、DOM 对象或敏感键；诊断仅在浏览器本地生成。"
     };
@@ -478,7 +514,7 @@
     var runtime = isPlainObject(currentOptions) ? currentOptions : {};
     return Object.keys(runtime).filter(function (key) {
       return !isSensitiveMetadataKey(key);
-    }).sort();
+    }).sort().slice(0, CONFIG.METADATA_MAX_OPTION_KEYS);
   }
 
   function isMetadataCandidateKey(key) {
@@ -486,8 +522,19 @@
       key !== "data" &&
       !/^column\d+$/.test(key) &&
       !isSensitiveMetadataKey(key) &&
-      /field|column|meta|label|name|alias|dimension|measure|metric|aggregate|formula|expression|calc|query|qinfo|header|schema|binding|bind/i.test(key)
+      !isTopLevelRowDataKey(key) &&
+      looksLikeMetadataKey(key)
     );
+  }
+
+  function looksLikeMetadataKey(key) {
+    return /field|column|meta|label|name|alias|dimension|measure|metric|aggregate|formula|expression|calc|query|qinfo|header|schema|binding|bind/i.test(String(key));
+  }
+
+  function isTopLevelRowDataKey(key) {
+    var text = String(key);
+    if (/metadata$/i.test(text)) return false;
+    return /(?:data|rows?|records?|values?|samples?|examples?|results?|payload|content)$/i.test(text);
   }
 
   function isSensitiveMetadataKey(key) {
@@ -502,12 +549,24 @@
     );
   }
 
-  function summarizeMetadataValue(value, depth, seen) {
+  function summarizeMetadataValue(value, depth, seen, budget) {
+    if (!consumeMetadataNode(budget)) return "[全局诊断预算已耗尽]";
     if (value === null || typeof value === "boolean" || typeof value === "number") return value;
     if (typeof value === "string") {
-      return value.length > CONFIG.METADATA_MAX_STRING_CHARS
-        ? value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS) + "...[已截断]"
-        : value;
+      var remainingChars = Math.max(0, CONFIG.METADATA_MAX_TOTAL_CHARS - budget.chars);
+      if (remainingChars === 0 && value.length > 0) {
+        budget.truncated = true;
+        budget.exhausted = true;
+        return "[全局诊断预算已耗尽]";
+      }
+      var maxChars = Math.min(CONFIG.METADATA_MAX_STRING_CHARS, remainingChars);
+      var text = value.slice(0, maxChars);
+      consumeMetadataChars(budget, text.length);
+      if (value.length > text.length) {
+        budget.truncated = true;
+        return text + "...[已截断]";
+      }
+      return text;
     }
     if (typeof value === "undefined") return "[已省略 undefined]";
     if (typeof value === "function") return "[已省略函数]";
@@ -525,7 +584,7 @@
     try {
       if (Array.isArray(value)) {
         var arrayResult = value.slice(0, CONFIG.METADATA_MAX_ARRAY_ITEMS).map(function (item) {
-          return summarizeMetadataValue(item, depth + 1, seen);
+          return summarizeMetadataValue(item, depth + 1, seen, budget);
         });
         if (value.length > CONFIG.METADATA_MAX_ARRAY_ITEMS) {
           arrayResult.push("[其余 " + (value.length - CONFIG.METADATA_MAX_ARRAY_ITEMS) + " 项已省略]");
@@ -538,14 +597,17 @@
         return !isSensitiveMetadataKey(key);
       }).sort();
       keys.slice(0, CONFIG.METADATA_MAX_OBJECT_KEYS).forEach(function (key) {
+        if (budget.exhausted) return;
+        var outputKey = truncateMetadataKey(key);
+        if (!consumeMetadataChars(budget, outputKey.length)) return;
         if (isNestedRowDataKey(key)) {
-          result[key] = describeOmittedRowData(value[key]);
+          result[outputKey] = describeOmittedRowData(value[key]);
           return;
         }
         try {
-          result[key] = summarizeMetadataValue(value[key], depth + 1, seen);
+          result[outputKey] = summarizeMetadataValue(value[key], depth + 1, seen, budget);
         } catch (_) {
-          result[key] = "[读取失败]";
+          result[outputKey] = "[读取失败]";
         }
       });
       if (keys.length > CONFIG.METADATA_MAX_OBJECT_KEYS) {
@@ -555,6 +617,55 @@
     } finally {
       seen.pop();
     }
+  }
+
+  function consumeMetadataNode(budget) {
+    if (budget.nodes >= CONFIG.METADATA_MAX_TOTAL_NODES) {
+      budget.truncated = true;
+      budget.exhausted = true;
+      return false;
+    }
+    budget.nodes += 1;
+    return true;
+  }
+
+  function consumeMetadataChars(budget, count) {
+    if (budget.chars + count > CONFIG.METADATA_MAX_TOTAL_CHARS) {
+      budget.truncated = true;
+      budget.exhausted = true;
+      return false;
+    }
+    budget.chars += count;
+    return true;
+  }
+
+  function truncateMetadataKey(key) {
+    var text = String(key);
+    return text.length > CONFIG.METADATA_MAX_KEY_CHARS
+      ? text.slice(0, CONFIG.METADATA_MAX_KEY_CHARS) + "...[键已截断]"
+      : text;
+  }
+
+  function stringifyMetadataDiagnostic(diagnostic) {
+    var text = JSON.stringify(diagnostic, null, 2);
+    if (text.length <= CONFIG.METADATA_MAX_JSON_CHARS) return text;
+
+    return JSON.stringify({
+      schemaVersion: diagnostic.schemaVersion,
+      optionsKeys: diagnostic.optionsKeys,
+      metadataCandidateKeys: diagnostic.metadataCandidateKeys,
+      omittedRowCandidateKeys: diagnostic.omittedRowCandidateKeys,
+      boundSources: diagnostic.boundSources,
+      metadata: {"__truncated": "诊断超过最终 JSON 限制，元数据内容已省略"},
+      limits: diagnostic.limits,
+      budget: {
+        nodes: diagnostic.budget.nodes,
+        chars: diagnostic.budget.chars,
+        truncated: true,
+        exhausted: true
+      },
+      safety: diagnostic.safety
+    }, null, 2);
   }
 
   function describeOmittedRowData(value) {
