@@ -599,7 +599,7 @@
   }
 
   function isSensitiveMetadataKey(key) {
-    return /auth|bearer|cookie|token|jwt|secret|password|api.?key|access.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
+    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
   }
 
   function isNestedRowDataKey(key) {
