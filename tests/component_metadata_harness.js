@@ -270,6 +270,7 @@ async function main() {
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serializedDescriptor: "{\"name\":\"password\",\"value\":\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
+      serializedHeaderTuple: "[\"Authorization\",\"OPAQUE_SERIALIZED_TUPLE_TOKEN\"]",
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
       xmlDescriptor: "<property name=\"password\" value=\"OPAQUE_XML_DESCRIPTOR_PASSWORD\"/>",
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
@@ -475,6 +476,7 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptorsText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.serializedHeaderTuple, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedReversedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlAttribute, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlCamelDescriptor, /已省略可能包含凭证的字符串/);
@@ -665,6 +667,7 @@ async function main() {
     "OPAQUE_NETRC_PASSWORD",
     "OPAQUE_QUOTED_COMMAND_PASSWORD",
     "OPAQUE_TRUNCATED_XML_PASSWORD",
+    "OPAQUE_SERIALIZED_TUPLE_TOKEN",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
