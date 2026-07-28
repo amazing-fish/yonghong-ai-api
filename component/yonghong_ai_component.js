@@ -726,7 +726,7 @@
     return (
       isSerializedPrivateJwk(sample, value.length > sample.length) ||
       isSerializedSensitiveDescriptor(sample, value.length > sample.length) ||
-      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
+      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
       isSensitiveMetadataXml(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
@@ -742,7 +742,7 @@
   }
 
   function isSensitiveMetadataXml(sample) {
-    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:authorization|cookie|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token)\b[^>]*>/i;
+    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:authorization|cookie|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
     var tagPattern = /<[^>]*>/g;
@@ -763,8 +763,15 @@
 
   function isSerializedSensitiveDescriptor(sample, truncated) {
     if (!/\{\s*["']/.test(sample)) return false;
-    var labelMatch = sample.match(/["'](?:name|key|header|label)["']\s*:\s*["']([^"']+)["']/i);
-    var hasSensitiveLabel = Boolean(labelMatch && isSensitiveMetadataKey(labelMatch[1]));
+    var labelPattern = /["'](?:name|key|header|label)["']\s*:\s*["']([^"']+)["']/gi;
+    var labelMatch;
+    var hasSensitiveLabel = false;
+    while ((labelMatch = labelPattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(labelMatch[1])) {
+        hasSensitiveLabel = true;
+        break;
+      }
+    }
     var hasAssociatedValue = /["'](?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)["']\s*:/.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
