@@ -99,11 +99,22 @@ async function main() {
     schemaMeta = level;
   }
 
+  const hugeMeta = {};
+  for (let index = 0; index < 31; index += 1) {
+    hugeMeta[`key_${String(index).padStart(2, "0")}`] = `metadata_${index}`;
+  }
+
   global.$container = "metadata-harness-component";
-  global.options = {
+  const runtimeOptions = {
     data: [{column1: "SECRET_ROW_VALUE"}],
     column1: ["SECRET_COLUMN_VALUE"],
+  };
+  for (let index = 0; index < 150; index += 1) {
+    runtimeOptions[`a_option_${String(index).padStart(3, "0")}`] = index;
+  }
+  Object.assign(runtimeOptions, {
     fieldMeta,
+    hugeMeta,
     qinfo: {
       headers: [{name: "failure_rate", type: "double"}],
       cookie: "SECRET_COOKIE",
@@ -116,7 +127,8 @@ async function main() {
     schemaMeta,
     renderHelper() {},
     chartElement: {nodeType: 1, nodeName: "DIV"},
-  };
+  });
+  global.options = runtimeOptions;
 
   require(path.resolve(__dirname, "../component/yonghong_ai_component.js"));
   await elements['[data-action="copyMetadata"]'].onclick();
@@ -124,8 +136,14 @@ async function main() {
   assert.ok(clipboardText, "diagnostic should be copied");
   const diagnostic = JSON.parse(clipboardText);
 
-  assert.deepStrictEqual(diagnostic.metadataCandidateKeys, ["fieldMeta", "qinfo", "schemaMeta"]);
+  assert.deepStrictEqual(
+    diagnostic.metadataCandidateKeys,
+    ["fieldMeta", "hugeMeta", "qinfo", "schemaMeta"],
+  );
   assert.deepStrictEqual(diagnostic.omittedRowCandidateKeys, ["metadataRows", "queryData"]);
+  assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
+  assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
+  assert.strictEqual(diagnostic.optionKeyScan.scanTruncated, false);
   assert.deepStrictEqual(diagnostic.boundSources, ["column1"]);
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
@@ -136,6 +154,11 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.rows, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
+  assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
+  assert.strictEqual(
+    Object.keys(diagnostic.metadata.hugeMeta).filter((key) => key !== "__truncatedKeys").length,
+    30,
+  );
   assert.strictEqual(diagnostic.budget.exhausted, true);
   assert.ok(clipboardText.length <= diagnostic.limits.maxJsonChars);
 
