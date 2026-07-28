@@ -197,6 +197,7 @@ async function main() {
       mailSettings: {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
+        keyStore: "OPAQUE_PKCS12_BASE64",
       },
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       jsonSchema: {
@@ -306,7 +307,7 @@ async function main() {
       encodedParameterName: "https://example.com/cb?access%5Ftoken=OPAQUE_ENCODED_PARAMETER_NAME_TOKEN",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
-      endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
+      endpointText: "https://example.com/cb?code=OPAQUE_AUTHORIZATION_CODE",
       javaHeaderText: "JSESSIONID=OPAQUE_JAVA_SESSION_ID",
       phpHeaderText: "PHPSESSID=OPAQUE_PHP_SESSION_ID",
       aspHeaderText: "ASP.NET_SessionId=OPAQUE_ASP_SESSION_ID",
@@ -481,6 +482,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
