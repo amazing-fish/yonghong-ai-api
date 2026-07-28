@@ -637,7 +637,7 @@
 
   function hasSensitiveMetadataKeyAlias(text) {
     return (
-      /(?:api|access|account|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
+      /(?:api|access|account|consumer|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?keys?(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
       /(?:tls|ssl)[-_.]?key(?:[-_.]?data)?$/i.test(text) ||
       /client[-_.]?(?:cert|key(?:[-_.]?data)?)$/i.test(text) ||
       /key[-_.]?store$/i.test(text) ||
