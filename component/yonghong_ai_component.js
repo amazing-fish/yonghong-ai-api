@@ -726,7 +726,8 @@
     return (
       isSerializedPrivateJwk(sample, value.length > sample.length) ||
       isSerializedSensitiveDescriptor(sample, value.length > sample.length) ||
-      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
+      isSensitiveMetadataAssignment(sample) ||
+      isSensitiveMetadataAssignment(normalizedUrlSample) ||
       isSensitiveMetadataXml(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
@@ -739,6 +740,10 @@
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(sample)
     );
+  }
+
+  function isSensitiveMetadataAssignment(sample) {
+    return /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
   }
 
   function isSensitiveMetadataXml(sample) {
@@ -822,7 +827,7 @@
 
   function isLikelyRowArray(key, value) {
     if (!Array.isArray(value) || value.length === 0) return false;
-    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i.test(String(key))) {
+    if (/(?:fields?|columns?|headers?|schema|metadata|definitions?|dimensions?|measures?|metrics?|bindings?|calculations?|formulas?|expressions?|aggregates?|functions?|choices?|options?|enums?|categories?|labels?|roles?|types?|aliases?)/i.test(String(key))) {
       return false;
     }
     var visibleLength = Math.min(value.length, CONFIG.METADATA_MAX_ARRAY_ITEMS);
