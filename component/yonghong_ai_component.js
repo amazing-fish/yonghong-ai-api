@@ -626,7 +626,7 @@
     var text = String(key);
     return (
       /^[A-Za-z][A-Za-z0-9]{0,120}pass$/i.test(text) ||
-      /^[A-Za-z][A-Za-z0-9]*(?:Tokens?|Secrets?|Passwords?|Passwds?|Pwds?|Passphrases?|Credentials?|SessionIds?|Cookies?)$/.test(text) ||
+      /^[A-Za-z][A-Za-z0-9]{0,120}(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|sessionids?|cookies?)$/i.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:string|value|text|data|blob|bytes|base64)$/i.test(text) ||
       /(?:tokens?|secrets?|passwords?|passwds?|pwds?|passphrases?|credentials?|session[-_.]?ids?|cookies?)(?:map|lookup|index|dictionary|dict|by[a-z0-9]+)$/i.test(text) ||
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
@@ -1081,8 +1081,15 @@
 
   function isJsonSchemaShapedObject(value) {
     try {
+      var schemaType = value.type;
       return (
-        (typeof value.type === "string" && /^(?:object|array)$/i.test(value.type)) ||
+        (typeof schemaType === "string" && /^(?:object|array)$/i.test(schemaType)) ||
+        (
+          Array.isArray(schemaType) &&
+          schemaType.some(function (type) {
+            return typeof type === "string" && /^(?:object|array)$/i.test(type);
+          })
+        ) ||
         isPlainObject(value.properties) ||
         isPlainObject(value.items) ||
         typeof value.$schema === "string"
