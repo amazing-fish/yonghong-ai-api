@@ -719,19 +719,37 @@
 
   function isSensitiveMetadataString(value) {
     var sample = value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS);
+    var normalizedUrlSample = normalizeMetadataUrlDelimiters(sample);
     return (
       /\b(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?(?:id|token)|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key|client[-_]?secret|secret)\b["']?\s*[:=]/i.test(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
-      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]+@/i.test(sample) ||
+      /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]+@/i.test(normalizedUrlSample) ||
       (
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
-        /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]{32,}$/i.test(sample)
+        /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]{32,}$/i.test(normalizedUrlSample)
       ) ||
-      /(?:[?&]|%3f|%26)(?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))(?:=|%3d)/i.test(sample) ||
+      /[?&](?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
+  }
+
+  function normalizeMetadataUrlDelimiters(value) {
+    var result = value;
+    for (var pass = 0; pass < 3; pass += 1) {
+      var normalized = result
+        .replace(/%25/gi, "%")
+        .replace(/%2f/gi, "/")
+        .replace(/%3a/gi, ":")
+        .replace(/%40/gi, "@")
+        .replace(/%3f/gi, "?")
+        .replace(/%26/gi, "&")
+        .replace(/%3d/gi, "=");
+      if (normalized === result) break;
+      result = normalized;
+    }
+    return result;
   }
 
   function isSensitiveNameValueTuple(value) {
