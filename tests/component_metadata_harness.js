@@ -176,6 +176,16 @@ async function main() {
   fallbackDate.toString = () => "redis://:OPAQUE_DATE_FALLBACK_PASSWORD@example.com/0";
 
   Object.assign(runtimeOptions, {
+    configMeta: {
+      connectionSettings: "{\"user\":\"demo\",\"pass\":\"OPAQUE_SERIALIZED_PASS_VALUE\"}",
+      cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
+      databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
+      environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
+      packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
+      registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
+      serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
+      serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
+    },
     cryptoMeta: {
       backupJwk: {
         kty: "oct",
@@ -185,6 +195,22 @@ async function main() {
         server: "https://cluster.example.com",
         "client-key-data": "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
         clientKeyData: "OPAQUE_CAMEL_KUBECONFIG_CLIENT_KEY_DATA",
+      },
+      connectionOptions: {
+        user: "demo",
+        pass: "OPAQUE_OBJECT_PASS_VALUE",
+      },
+      currentDescriptor: {
+        name: "password",
+        "current-value": "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
+      },
+      defaultDescriptor: {
+        name: "password",
+        default_value: "OPAQUE_DEFAULT_VALUE_DESCRIPTOR",
+      },
+      rawDescriptor: {
+        name: "password",
+        "raw.value": "OPAQUE_RAW_VALUE_DESCRIPTOR",
       },
       signingJwk: {
         kty: "RSA",
@@ -215,23 +241,16 @@ async function main() {
       encodedEndpointText: "https%3A%2F%2Fexample.com%2Fapi%3Ftoken%3DOPAQUE_ENCODED_GENERIC_TOKEN",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
-      databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
-      environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
-      cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
       javaHeaderText: "JSESSIONID=OPAQUE_JAVA_SESSION_ID",
       phpHeaderText: "PHPSESSID=OPAQUE_PHP_SESSION_ID",
       aspHeaderText: "ASP.NET_SessionId=OPAQUE_ASP_SESSION_ID",
       connectHeaderText: "connect.sid=OPAQUE_CONNECT_SESSION_ID",
-      packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
-      registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
-      serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       serializedDescriptor: "{\"name\":\"password\",\"value\":\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
-      serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       xmlDescriptor: "<property name=\"password\" value=\"OPAQUE_XML_DESCRIPTOR_PASSWORD\"/>",
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
       xmlCamelDescriptor: "<property name=\"dbPassword\" value=\"OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD\"/>",
@@ -339,6 +358,7 @@ async function main() {
     diagnostic.metadataCandidateKeys,
     [
       "aggregateFunctions",
+      "configMeta",
       "cryptoMeta",
       "dateMeta",
       "downloadMeta",
@@ -375,10 +395,23 @@ async function main() {
   assert.ok(diagnostic.boundSources[1].length < 200);
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
+  assert.match(diagnostic.metadata.configMeta.connectionSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.serializedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "clientKeyData"));
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.connectionOptions.user, "demo");
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.connectionOptions, "pass"));
+  assert.match(diagnostic.metadata.cryptoMeta.currentDescriptor, /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.cryptoMeta.defaultDescriptor, /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.cryptoMeta.rawDescriptor, /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.serializedPrivate, /已省略可能包含凭证的字符串/);
   assert.strictEqual(
@@ -397,23 +430,16 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.encodedEndpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.databaseSettings, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.javaHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.phpHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.aspHeaderText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.connectHeaderText, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.packageSettings, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptorsText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedReversedDescriptor, /已省略可能包含凭证的字符串/);
-  assert.match(diagnostic.metadata.downloadMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlAttribute, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlCamelDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlCamelElement, /已省略可能包含凭证的字符串/);
@@ -587,6 +613,11 @@ async function main() {
     "OPAQUE_CONNECT_SESSION_ID",
     "OPAQUE_NPM_AUTH_VALUE",
     "OPAQUE_DOCKER_AUTH_VALUE",
+    "OPAQUE_OBJECT_PASS_VALUE",
+    "OPAQUE_SERIALIZED_PASS_VALUE",
+    "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
+    "OPAQUE_DEFAULT_VALUE_DESCRIPTOR",
+    "OPAQUE_RAW_VALUE_DESCRIPTOR",
     "OPAQUE_SYMMETRIC_JWK_KEY",
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
