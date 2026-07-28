@@ -651,6 +651,9 @@
         }
       }
     }
+    if (!Array.isArray(value) && isPrivateJwk(value)) {
+      return "[已省略私有 JWK]";
+    }
     if (!Array.isArray(value) && isSensitiveNamedValueDescriptor(value)) {
       return "[已省略敏感名称/值描述符]";
     }
@@ -809,6 +812,38 @@
       return true;
     }
     return hasSensitiveName && hasAssociatedValue;
+  }
+
+  function isPrivateJwk(value) {
+    var keyType = "";
+    var hasPrivateMember = false;
+    var hasSymmetricKey = false;
+    var scanned = 0;
+
+    try {
+      for (var key in value) {
+        scanned += 1;
+        if (scanned > CONFIG.METADATA_MAX_SCANNED_OBJECT_KEYS) {
+          return Boolean(keyType || hasPrivateMember || hasSymmetricKey);
+        }
+        if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+        var normalizedKey = String(key).toLowerCase();
+        if (normalizedKey === "kty") {
+          keyType = String(value[key]).toLowerCase();
+        } else if (/^(?:d|p|q|dp|dq|qi|oth)$/.test(normalizedKey)) {
+          hasPrivateMember = true;
+        } else if (normalizedKey === "k") {
+          hasSymmetricKey = true;
+        }
+      }
+    } catch (_) {
+      return true;
+    }
+
+    return (
+      (keyType === "oct" && hasSymmetricKey) ||
+      (Boolean(keyType) && hasPrivateMember)
+    );
   }
 
   function collectBoundedMetadataObjectKeys(value) {
