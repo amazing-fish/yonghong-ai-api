@@ -234,6 +234,7 @@ async function main() {
       },
       binaryView: new Uint8Array(Buffer.from("OPAQUE_BINARY_VIEW_SECRET")),
       cellMetadata: [{rowIndex: 0, value: "SECRET_CELL_METADATA_VALUE"}],
+      cellMetadataByIndex: {0: {customer: "SECRET_CELL_METADATA_BY_INDEX_VALUE"}},
       clusterConfig: {
         server: "https://cluster.example.com",
         "client-key-data": "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
@@ -496,6 +497,7 @@ async function main() {
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.binaryView, /已省略二进制视图/);
   assert.match(diagnostic.metadata.cryptoMeta.cellMetadata, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.cryptoMeta.cellMetadataByIndex, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "clientKeyData"));
