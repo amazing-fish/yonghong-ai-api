@@ -740,6 +740,7 @@
     var normalizedUrlSample = normalizeMetadataUrlDelimiters(inspectionSample);
     return (
       isSerializedPrivateJwk(inspectionSample, value.length > sample.length) ||
+      isSerializedSensitiveTuple(inspectionSample) ||
       isSerializedSensitiveDescriptor(inspectionSample, value.length > sample.length) ||
       isSensitiveMetadataAssignment(inspectionSample) ||
       isSensitiveMetadataAssignment(normalizedUrlSample) ||
@@ -825,6 +826,16 @@
     var hasAssociatedValue = /["'](?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']\s*:/.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
+  }
+
+  function isSerializedSensitiveTuple(sample) {
+    if (!/\[\s*["']/.test(sample)) return false;
+    var tuplePattern = /\[\s*["']([^"']+)["']\s*,\s*["'][^"']*/g;
+    var tupleMatch;
+    while ((tupleMatch = tuplePattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(tupleMatch[1])) return true;
+    }
+    return false;
   }
 
   function isSerializedPrivateJwk(sample, truncated) {
