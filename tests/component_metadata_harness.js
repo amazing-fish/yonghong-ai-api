@@ -207,10 +207,13 @@ async function main() {
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
+      environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
+      xmlDescriptor: "<property name=\"password\" value=\"OPAQUE_XML_DESCRIPTOR_PASSWORD\"/>",
+      xmlText: "<connection><password>OPAQUE_XML_PASSWORD</password></connection>",
     },
     fieldMeta,
     hugeMeta,
@@ -362,10 +365,13 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlDescriptor, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
@@ -505,6 +511,10 @@ async function main() {
     "OPAQUE_GENERIC_JSON_TOKEN",
     "OPAQUE_CAMEL_QUERY_TOKEN",
     "OPAQUE_CAMEL_JSON_TOKEN",
+    "OPAQUE_PREFIXED_API_KEY",
+    "OPAQUE_PREFIXED_DB_PASSWORD",
+    "OPAQUE_XML_DESCRIPTOR_PASSWORD",
+    "OPAQUE_XML_PASSWORD",
     "OPAQUE_SYMMETRIC_JWK_KEY",
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
