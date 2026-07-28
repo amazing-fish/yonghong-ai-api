@@ -608,7 +608,7 @@
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
-    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|items?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
+    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|items?|values?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
     if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
@@ -624,9 +624,23 @@
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
       /^[A-Za-z][A-Za-z0-9]*(?:Token|Secret|Password|Passwd|Pwd|Passphrase|Credential|SessionId)$/.test(text) ||
+      /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
-      /(?:^|[^a-z0-9])(?:pass|bearers?|cookies?|tokens?|jwts?|secrets?|passwords?|passwds?|pwds?|passphrases?|sessions?|credentials?|csrf)(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth|api.?key|access.?key|account.?key|secret.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|webhook(?:[-_.]?(?:url|uri|endpoint))?|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)/i.test(text)
+      hasSensitiveMetadataKeyAlias(text) ||
+      /(?:^|[^a-z0-9])(?:pass|bearers?|cookies?|tokens?|jwts?|secrets?|passwords?|passwds?|pwds?|passphrases?|sessions?|credentials?|csrf)(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth/i.test(text)
+    );
+  }
+
+  function hasSensitiveMetadataKeyAlias(text) {
+    return (
+      /(?:api|access|account|secret|subscription|encryption|signing|master|symmetric|private)[-_.]?key(?:[-_.]?(?:data|id|value|pem|base64))?$/i.test(text) ||
+      /client[-_.]?(?:cert|key(?:[-_.]?data)?)$/i.test(text) ||
+      /key[-_.]?store$/i.test(text) ||
+      /webhook(?:[-_.]?(?:url|uri|endpoint))?$/i.test(text) ||
+      /shared[-_.]?access(?:[-_.]?signature)?$/i.test(text) ||
+      /sas[-_.]?token$/i.test(text) ||
+      /(?:pfx|p12|pkcs[-_.]?(?:12|#12))$/i.test(text)
     );
   }
 
