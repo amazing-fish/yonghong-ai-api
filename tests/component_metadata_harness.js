@@ -171,6 +171,7 @@ async function main() {
   runtimeOptions[collisionKeyB] = {expression: "SECOND_COLLISION_FORMULA"};
   runtimeOptions.aggregateFunctions = ["SUM", "AVG"];
   runtimeOptions.aggregations = [{name: "SUM"}];
+  runtimeOptions.authorFieldMetadata = {fields: [{name: "author"}]};
   runtimeOptions.fieldList = [
     {name: "region", role: "dimension"},
     {name: "revenue", role: "measure"},
@@ -207,6 +208,7 @@ async function main() {
           type: "object",
           required: ["region"],
           properties: {
+            author: {type: "string"},
             region: {type: "string"},
             revenue: {type: "number"},
           },
@@ -433,6 +435,7 @@ async function main() {
     [
       "aggregateFunctions",
       "aggregations",
+      "authorFieldMetadata",
       "configMeta",
       "cryptoMeta",
       "dateMeta",
@@ -474,6 +477,7 @@ async function main() {
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
   assert.deepStrictEqual(diagnostic.metadata.aggregations, [{name: "SUM"}]);
+  assert.strictEqual(diagnostic.metadata.authorFieldMetadata.fields[0].name, "author");
   assert.deepStrictEqual(diagnostic.metadata.roles, ["dimension", "measure"]);
   assert.match(diagnostic.metadata.configMeta.boxedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.commandSettings, /已省略可能包含凭证的字符串/);
@@ -488,6 +492,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.author, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.revenue, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
