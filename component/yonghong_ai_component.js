@@ -607,7 +607,7 @@
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
-    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata)(?:map|byid|bykey|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
+    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|byid|bykey|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
     return /(?:data|datasets?|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
@@ -618,7 +618,11 @@
   }
 
   function isSensitiveMetadataKey(key) {
-    return /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|client.?key(?:.?data)?|private.?key|csrf/i.test(String(key));
+    var text = String(key);
+    return (
+      /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
+      /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|client.?key(?:.?data)?|private.?key|csrf/i.test(text)
+    );
   }
 
   function isNestedRowDataKey(key) {
@@ -779,7 +783,10 @@
   }
 
   function isSensitiveMetadataAssignment(sample) {
-    return /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
+    return (
+      /(?:^|[^A-Za-z0-9])[A-Za-z][A-Za-z0-9]*Pass["']?\s*[:=]/.test(sample) ||
+      /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample)
+    );
   }
 
   function isSensitiveWhitespaceMetadataAssignment(sample) {
