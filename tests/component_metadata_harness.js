@@ -159,7 +159,25 @@ async function main() {
   }
   const oversizedSource = `column${"9".repeat(40000)}`;
   runtimeOptions[oversizedSource] = [];
+  const collisionPrefix = `formula${"x".repeat(130)}`;
+  const collisionKeyA = `${collisionPrefix}A`;
+  const collisionKeyB = `${collisionPrefix}B`;
+  runtimeOptions[collisionKeyA] = {expression: "FIRST_COLLISION_FORMULA"};
+  runtimeOptions[collisionKeyB] = {expression: "SECOND_COLLISION_FORMULA"};
+
+  const primaryDate = new Date("2026-07-28T00:00:00.000Z");
+  primaryDate.toISOString = () => "Bearer OPAQUE_DATE_ISO_TOKEN";
+  const fallbackDate = new Date("2026-07-28T00:00:00.000Z");
+  fallbackDate.toISOString = () => {
+    throw new Error("forced date fallback");
+  };
+  fallbackDate.toString = () => "redis://:OPAQUE_DATE_FALLBACK_PASSWORD@example.com/0";
+
   Object.assign(runtimeOptions, {
+    dateMeta: {
+      fallbackDate,
+      primaryDate,
+    },
     fieldMeta,
     hugeMeta,
     qinfo: {
@@ -253,10 +271,21 @@ async function main() {
 
   assert.ok(clipboardText, "diagnostic should be copied");
   const diagnostic = JSON.parse(clipboardText);
+  const collisionOutputKey = `${collisionKeyA.slice(0, 120)}...[键已截断]`;
 
   assert.deepStrictEqual(
     diagnostic.metadataCandidateKeys,
-    ["fieldMeta", "headers", "hugeMeta", "prototypeMeta", "qinfo", "schemaMeta"],
+    [
+      "dateMeta",
+      "fieldMeta",
+      collisionOutputKey,
+      `${collisionOutputKey}#2`,
+      "headers",
+      "hugeMeta",
+      "prototypeMeta",
+      "qinfo",
+      "schemaMeta",
+    ],
   );
   assert.deepStrictEqual(
     diagnostic.omittedRowCandidateKeys,
@@ -279,6 +308,10 @@ async function main() {
   assert.match(diagnostic.boundSources[1], /\[键已截断\]$/);
   assert.ok(diagnostic.boundSources[1].length < 200);
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
+  assert.match(diagnostic.metadata.dateMeta.primaryDate, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.dateMeta.fallbackDate, /已省略可能包含凭证的字符串/);
+  assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
+  assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.strictEqual(diagnostic.metadata.fieldMeta.self, "[循环引用]");
@@ -404,6 +437,8 @@ async function main() {
     "Basic dTpw",
     "OPAQUE_TRUNCATED_DESCRIPTOR",
     "OPAQUE_REDIS_PASSWORD",
+    "OPAQUE_DATE_ISO_TOKEN",
+    "OPAQUE_DATE_FALLBACK_PASSWORD",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
