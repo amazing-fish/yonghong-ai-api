@@ -25,7 +25,11 @@
     MAX_ROWS: 300,
     DEFAULT_MODE: "options_data",
     DEFAULT_DATASET: "event_summary",
-    DEFAULT_FIELD_DEFINITIONS: []
+    DEFAULT_FIELD_DEFINITIONS: [],
+    METADATA_MAX_DEPTH: 4,
+    METADATA_MAX_ARRAY_ITEMS: 5,
+    METADATA_MAX_OBJECT_KEYS: 30,
+    METADATA_MAX_STRING_CHARS: 500
   };
   var SETTINGS_STORAGE_KEY = createSettingsStorageKey();
 
@@ -172,7 +176,7 @@
       '<label>xmlData<textarea data-field="xmlData" rows="5" placeholder="从永洪10.2帮助复制，可使用 {{name}} 模板"></textarea></label>' +
       '<label>模板参数 JSON<textarea data-field="params" rows="3" placeholder="{&quot;name&quot;:&quot;value&quot;}"></textarea></label>' +
       '<label>JSON 行路径<input data-field="rowsPath" type="text" placeholder="例如 results.rows，可留空自动识别"></label>' +
-      '<div><button data-action="testData">测试取数与字段</button> <button data-action="saveSettings">保存设置</button></div>' +
+      '<div><button data-action="testData">测试取数与字段</button> <button data-action="copyMetadata">复制元数据诊断</button> <button data-action="saveSettings">保存设置</button></div>' +
       '<pre data-field="debug" style="max-height:180px;overflow:auto;background:#f6f8fa;padding:8px"></pre>' +
       '</div>';
     container.appendChild(settings);
@@ -204,6 +208,7 @@
   function bindEvents() {
     getAction("send").onclick = submitQuestion;
     getAction("testData").onclick = testData;
+    getAction("copyMetadata").onclick = copyMetadataDiagnostics;
     getAction("saveSettings").onclick = saveSettingsFromForm;
   }
 
@@ -414,19 +419,190 @@
   }
 
   function inspectRuntimeBinding() {
-    var optionKeys = Object.keys(currentOptions || {}).sort();
+    var optionKeys = getSafeRuntimeOptionKeys();
     return {
       optionsKeys: optionKeys,
-      metadataCandidateKeys: optionKeys.filter(function (key) {
-        return (
-          !/^column\d+$/.test(key) &&
-          /field|column|meta|label|name|dimension|measure/i.test(key)
-        );
-      }),
+      metadataCandidateKeys: optionKeys.filter(isMetadataCandidateKey),
       boundSources: state.boundFields.map(function (field) { return field.source; }),
       configuredFieldCount: state.settings.fieldDefinitions.length,
       note: "字段名、角色和计算公式不会从 options.data 自动推断；如 metadataCandidateKeys 非空，可把本段结果交给开发者继续适配。"
     };
+  }
+
+  async function copyMetadataDiagnostics() {
+    try {
+      var text = JSON.stringify(buildMetadataDiagnostic(), null, 2);
+      getField("debug").textContent = text;
+      var copied = await copyTextToClipboard(text);
+      setStatus(copied ? "元数据诊断已复制" : "已生成元数据诊断，请从下方手动复制");
+    } catch (error) {
+      getField("debug").textContent = error.stack || error.message;
+      setStatus("元数据诊断生成失败");
+    }
+  }
+
+  function buildMetadataDiagnostic() {
+    var runtime = isPlainObject(currentOptions) ? currentOptions : {};
+    var optionKeys = getSafeRuntimeOptionKeys();
+    var candidateKeys = optionKeys.filter(isMetadataCandidateKey);
+    var metadata = Object.create(null);
+
+    candidateKeys.forEach(function (key) {
+      try {
+        metadata[key] = summarizeMetadataValue(runtime[key], 0, []);
+      } catch (_) {
+        metadata[key] = "[读取失败]";
+      }
+    });
+
+    return {
+      schemaVersion: 1,
+      optionsKeys: optionKeys,
+      metadataCandidateKeys: candidateKeys,
+      boundSources: state.boundFields.map(function (field) { return field.source; }),
+      configuredFields: state.boundFields.map(function (field) {
+        return {source: field.source, name: field.name, role: field.role};
+      }),
+      metadata: metadata,
+      limits: {
+        maxDepth: CONFIG.METADATA_MAX_DEPTH,
+        maxArrayItems: CONFIG.METADATA_MAX_ARRAY_ITEMS,
+        maxObjectKeys: CONFIG.METADATA_MAX_OBJECT_KEYS,
+        maxStringChars: CONFIG.METADATA_MAX_STRING_CHARS
+      },
+      safety: "未包含 options.data、顶层 columnN 值、函数、DOM 对象或敏感键；诊断仅在浏览器本地生成。"
+    };
+  }
+
+  function getSafeRuntimeOptionKeys() {
+    var runtime = isPlainObject(currentOptions) ? currentOptions : {};
+    return Object.keys(runtime).filter(function (key) {
+      return !isSensitiveMetadataKey(key);
+    }).sort();
+  }
+
+  function isMetadataCandidateKey(key) {
+    return (
+      key !== "data" &&
+      !/^column\d+$/.test(key) &&
+      !isSensitiveMetadataKey(key) &&
+      /field|column|meta|label|name|alias|dimension|measure|metric|aggregate|formula|expression|calc|query|qinfo|header|schema|binding|bind/i.test(key)
+    );
+  }
+
+  function isSensitiveMetadataKey(key) {
+    return /auth|bearer|cookie|token|secret|password|api.?key|access.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
+  }
+
+  function isNestedRowDataKey(key) {
+    var text = String(key);
+    return (
+      /^(data|rows?|records?|rawdata|sourcedata|rowdata|values?|samples?|examples?|items?|list|results?|payload|content)$/i.test(text) ||
+      /(?:sample|example|row|record)(?:data|values?)?$/i.test(text)
+    );
+  }
+
+  function summarizeMetadataValue(value, depth, seen) {
+    if (value === null || typeof value === "boolean" || typeof value === "number") return value;
+    if (typeof value === "string") {
+      return value.length > CONFIG.METADATA_MAX_STRING_CHARS
+        ? value.slice(0, CONFIG.METADATA_MAX_STRING_CHARS) + "...[已截断]"
+        : value;
+    }
+    if (typeof value === "undefined") return "[已省略 undefined]";
+    if (typeof value === "function") return "[已省略函数]";
+    if (typeof value === "symbol" || typeof value === "bigint") return String(value);
+    if (isDomLike(value)) return "[已省略 DOM 对象]";
+    if (seen.indexOf(value) >= 0) return "[循环引用]";
+    if (depth >= CONFIG.METADATA_MAX_DEPTH) {
+      return Array.isArray(value) ? "[数组层级已截断]" : "[对象层级已截断]";
+    }
+    if (Object.prototype.toString.call(value) === "[object Date]") {
+      try { return value.toISOString(); } catch (_) { return String(value); }
+    }
+
+    seen.push(value);
+    try {
+      if (Array.isArray(value)) {
+        var arrayResult = value.slice(0, CONFIG.METADATA_MAX_ARRAY_ITEMS).map(function (item) {
+          return summarizeMetadataValue(item, depth + 1, seen);
+        });
+        if (value.length > CONFIG.METADATA_MAX_ARRAY_ITEMS) {
+          arrayResult.push("[其余 " + (value.length - CONFIG.METADATA_MAX_ARRAY_ITEMS) + " 项已省略]");
+        }
+        return arrayResult;
+      }
+
+      var result = Object.create(null);
+      var keys = Object.keys(value).filter(function (key) {
+        return !isSensitiveMetadataKey(key);
+      }).sort();
+      keys.slice(0, CONFIG.METADATA_MAX_OBJECT_KEYS).forEach(function (key) {
+        if (isNestedRowDataKey(key)) {
+          result[key] = describeOmittedRowData(value[key]);
+          return;
+        }
+        try {
+          result[key] = summarizeMetadataValue(value[key], depth + 1, seen);
+        } catch (_) {
+          result[key] = "[读取失败]";
+        }
+      });
+      if (keys.length > CONFIG.METADATA_MAX_OBJECT_KEYS) {
+        result.__truncatedKeys = keys.length - CONFIG.METADATA_MAX_OBJECT_KEYS;
+      }
+      return result;
+    } finally {
+      seen.pop();
+    }
+  }
+
+  function describeOmittedRowData(value) {
+    if (Array.isArray(value)) return "[已省略潜在行数据：数组 " + value.length + " 项]";
+    if (value && typeof value === "object") {
+      try {
+        return "[已省略潜在行数据：对象 " + Object.keys(value).length + " 个键]";
+      } catch (_) {
+        return "[已省略潜在行数据：对象]";
+      }
+    }
+    return "[已省略潜在行数据]";
+  }
+
+  function isDomLike(value) {
+    if (!value || typeof value !== "object") return false;
+    if (typeof window !== "undefined" && value === window) return true;
+    if (typeof document !== "undefined" && value === document) return true;
+    return (
+      typeof value.nodeType === "number" ||
+      (typeof value.nodeName === "string" && value.ownerDocument)
+    );
+  }
+
+  async function copyTextToClipboard(text) {
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_) {}
+    }
+
+    var textarea;
+    try {
+      textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "readonly");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      container.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      return !!(document.execCommand && document.execCommand("copy"));
+    } catch (_) {
+      return false;
+    } finally {
+      if (textarea && textarea.parentNode === container) container.removeChild(textarea);
+    }
   }
 
   function renderTemplate(text, params) {
