@@ -918,15 +918,15 @@
 
     var tagPattern = /<[^>]*>/g;
     var tagMatch;
+    var hasSensitiveAttributeLabel = false;
     while ((tagMatch = tagPattern.exec(sample)) !== null) {
       var tag = tagMatch[0];
       var labelMatch = tag.match(/\b(?:name|key|header|label)\s*=\s*["']([^"']+)["']/i);
-      if (
-        labelMatch &&
-        isSensitiveMetadataKey(labelMatch[1]) &&
-        /\b(?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(tag)
-      ) {
-        return true;
+      if (labelMatch && isSensitiveMetadataKey(labelMatch[1])) {
+        if (/\b(?:value|values|val|data|content|text|default[-_.]?value|current[-_.]?value|raw[-_.]?value)\s*=\s*["'][^"']+/i.test(tag)) {
+          return true;
+        }
+        hasSensitiveAttributeLabel = true;
       }
     }
     var elementLabelPattern = /<\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([^<]+?))\s*<\s*\/\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>/gi;
@@ -940,7 +940,7 @@
       }
     }
     var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\b[^>]*>/i.test(sample);
-    if (hasSensitiveElementLabel && hasElementValue) return true;
+    if ((hasSensitiveAttributeLabel || hasSensitiveElementLabel) && hasElementValue) return true;
     if (
       truncated &&
       /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\s*>\s*[^<]*$/i.test(sample)
@@ -994,6 +994,19 @@
 
   function isSerializedSensitiveTuple(sample) {
     if (!/\[\s*["']/.test(sample)) return false;
+    var flattenedPattern = /\[\s*["']([^"']+)["']\s*,\s*["']([^"']*)["']\s*,\s*["']([^"']+)["']\s*,\s*["']([^"']*)["']/g;
+    var flattenedMatch;
+    while ((flattenedMatch = flattenedPattern.exec(sample)) !== null) {
+      var firstKey = flattenedMatch[1].toLowerCase().replace(/[-_.\s]/g, "");
+      var secondKey = flattenedMatch[3].toLowerCase().replace(/[-_.\s]/g, "");
+      var hasSensitiveLabel =
+        (/^(?:name|key|header|headername|label)$/.test(firstKey) && isSensitiveMetadataKey(flattenedMatch[2])) ||
+        (/^(?:name|key|header|headername|label)$/.test(secondKey) && isSensitiveMetadataKey(flattenedMatch[4]));
+      var hasAssociatedValue =
+        /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(firstKey) ||
+        /^(?:value|values|val|data|content|text|headervalue|defaultvalue|currentvalue|rawvalue)$/.test(secondKey);
+      if (hasSensitiveLabel && hasAssociatedValue) return true;
+    }
     var tuplePattern = /\[\s*["']([^"']+)["']\s*,\s*["'][^"']*/g;
     var tupleMatch;
     while ((tupleMatch = tuplePattern.exec(sample)) !== null) {
