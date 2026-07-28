@@ -203,6 +203,7 @@ async function main() {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         apiKeys: {production: "OPAQUE_API_KEY"},
         accessTokens: {production: "OPAQUE_ACCESS_TOKEN"},
+        accessTokenString: "OPAQUE_ACCESS_TOKEN_STRING",
         authorizationCode: "OPAQUE_AUTHORIZATION_CODE_FIELD",
         YHBISESSIONID: "OPAQUE_YONGHONG_SESSION",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
@@ -211,6 +212,7 @@ async function main() {
         keyStore: "OPAQUE_PKCS12_BASE64",
         oauthCredentials: "OPAQUE_OAUTH_CREDENTIALS",
         passwordHash: "OPAQUE_PASSWORD_HASH",
+        passwordString: "OPAQUE_PASSWORD_STRING",
         secretKey: "OPAQUE_OBJECT_SECRET_KEY",
         secrets: "OPAQUE_SECRETS_BLOB",
         sessionId: "OPAQUE_SESSION_ID",
@@ -512,6 +514,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "apiKeys"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokens"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokenString"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "authorizationCode"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "YHBISESSIONID"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
@@ -520,6 +523,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "oauthCredentials"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordHash"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "passwordString"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secretKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "secrets"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "sessionId"));
