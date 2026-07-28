@@ -125,6 +125,11 @@ async function main() {
         ["Authorization", "SECRET_TUPLE_AUTH"],
         ["sessionToken", "SECRET_TUPLE_TOKEN"],
       ],
+      headerLines: [
+        "Authorization: Bearer SECRET_RAW_ARRAY_AUTH",
+        "Cookie: YHBISESSIONID=SECRET_RAW_ARRAY_COOKIE",
+        "Content-Type: application/json",
+      ],
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
       queryData: [{name: "SECRET_NESTED_QUERY_ROW"}],
@@ -135,6 +140,7 @@ async function main() {
     sessionToken: "SECRET_TOP_LEVEL_TOKEN",
     queryData: [{name: "SECRET_QUERY_ROW"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
+    headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
     renderHelper() {},
     chartElement: {nodeType: 1, nodeName: "DIV"},
@@ -149,7 +155,7 @@ async function main() {
 
   assert.deepStrictEqual(
     diagnostic.metadataCandidateKeys,
-    ["fieldMeta", "hugeMeta", "qinfo", "schemaMeta"],
+    ["fieldMeta", "headers", "hugeMeta", "qinfo", "schemaMeta"],
   );
   assert.deepStrictEqual(diagnostic.omittedRowCandidateKeys, ["metadataRows", "queryData"]);
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
@@ -174,6 +180,9 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.headers[2], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.qinfo.headers[3], /已省略敏感名称\/值元组/);
   assert.match(diagnostic.metadata.qinfo.headers[4], /已省略敏感名称\/值元组/);
+  assert.match(diagnostic.metadata.qinfo.headerLines[0], /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.qinfo.headerLines[1], /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.headers, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
   assert.strictEqual(
@@ -201,6 +210,9 @@ async function main() {
     "SECRET_DESCRIPTOR_TOKEN",
     "SECRET_TUPLE_AUTH",
     "SECRET_TUPLE_TOKEN",
+    "SECRET_RAW_ARRAY_AUTH",
+    "SECRET_RAW_ARRAY_COOKIE",
+    "SECRET_RAW_HEADER",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
