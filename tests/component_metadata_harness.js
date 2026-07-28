@@ -102,6 +102,7 @@ async function main() {
   truncatedDescriptor.name = "Authorization";
 
   const fieldMeta = {
+    cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
     memberCache: {member_3: {caption: "SECRET_MEMBER_CACHE"}},
@@ -228,6 +229,12 @@ async function main() {
       },
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       jsonSchema: {
+        $defs: {
+          data: {type: "string"},
+        },
+        definitions: {
+          records: {type: "object"},
+        },
         type: "array",
         items: {
           type: "object",
@@ -545,6 +552,8 @@ async function main() {
   assert.ok(!Object.keys(diagnostic.metadata.configMeta.mailSettings).some((key) => key.includes("OPAQUE_OBJECT_KEY_CODE")));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
+  assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.$defs.data.type, "string");
+  assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.definitions.records.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
   assert.deepStrictEqual(
     diagnostic.metadata.configMeta.jsonSchema.items.dependentRequired.credit_card,
@@ -652,6 +661,7 @@ async function main() {
     ["failure_count / total_count", "revenue - cost"],
   );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.fieldMeta, "cookieHeader"));
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembersById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.memberCache, /已省略潜在行数据/);
