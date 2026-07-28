@@ -725,7 +725,7 @@
     var normalizedUrlSample = normalizeMetadataUrlDelimiters(sample);
     return (
       isSerializedPrivateJwk(sample, value.length > sample.length) ||
-      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|(?:auth(?:entication)?|oauth|access|refresh|id|session|csrf|xsrf|security|delegation|identity)?[-_]?token|session[-_]?id|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key|client[-_]?secret|secret)\b["']?\s*[:=]/i.test(sample) ||
+      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
       isSensitiveMetadataXml(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
@@ -741,8 +741,8 @@
   }
 
   function isSensitiveMetadataXml(sample) {
-    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:authorization|cookie|api[-_]?key|(?:auth(?:entication)?|oauth|access|refresh|id|session|csrf|xsrf|security|delegation|identity)?[-_]?token|session[-_]?id|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|client[-_]?secret|secret)\b[^>]*>/i;
-    var sensitiveDescriptor = /<[^>]*\b(?:name|key|label)\s*=\s*["'](?:authorization|cookie|api[-_]?key|(?:auth(?:entication)?|oauth|access|refresh|id|session|csrf|xsrf|security|delegation|identity)?[-_]?token|session[-_]?id|password|passwd|pwd|passphrase|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|client[-_]?secret|secret)["'][^>]*\b(?:value|val|content|text)\s*=\s*["'][^"']+/i;
+    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:authorization|cookie|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token)\b[^>]*>/i;
+    var sensitiveDescriptor = /<[^>]*\b(?:name|key|label)\s*=\s*["'](?:authorization|cookie|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token)["'][^>]*\b(?:value|val|content|text)\s*=\s*["'][^"']+/i;
     return sensitiveElement.test(sample) || sensitiveDescriptor.test(sample);
   }
 
