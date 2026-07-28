@@ -725,6 +725,7 @@
     var normalizedUrlSample = normalizeMetadataUrlDelimiters(sample);
     return (
       isSerializedPrivateJwk(sample, value.length > sample.length) ||
+      isSerializedSensitiveDescriptor(sample, value.length > sample.length) ||
       /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
       isSensitiveMetadataXml(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
@@ -742,8 +743,31 @@
 
   function isSensitiveMetadataXml(sample) {
     var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:authorization|cookie|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token)\b[^>]*>/i;
-    var sensitiveDescriptor = /<[^>]*\b(?:name|key|label)\s*=\s*["'](?:authorization|cookie|api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|session[-_]?id|account[-_]?key|shared[-_]?access[-_]?(?:key|signature)|sas[-_]?token)["'][^>]*\b(?:value|val|content|text)\s*=\s*["'][^"']+/i;
-    return sensitiveElement.test(sample) || sensitiveDescriptor.test(sample);
+    if (sensitiveElement.test(sample)) return true;
+
+    var tagPattern = /<[^>]*>/g;
+    var tagMatch;
+    while ((tagMatch = tagPattern.exec(sample)) !== null) {
+      var tag = tagMatch[0];
+      var labelMatch = tag.match(/\b(?:name|key|header|label)\s*=\s*["']([^"']+)["']/i);
+      if (
+        labelMatch &&
+        isSensitiveMetadataKey(labelMatch[1]) &&
+        /\b(?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)\s*=\s*["'][^"']+/i.test(tag)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function isSerializedSensitiveDescriptor(sample, truncated) {
+    if (!/\{\s*["']/.test(sample)) return false;
+    var labelMatch = sample.match(/["'](?:name|key|header|label)["']\s*:\s*["']([^"']+)["']/i);
+    var hasSensitiveLabel = Boolean(labelMatch && isSensitiveMetadataKey(labelMatch[1]));
+    var hasAssociatedValue = /["'](?:value|values|val|data|content|text|defaultvalue|currentvalue|rawvalue)["']\s*:/.test(sample);
+    if (hasSensitiveLabel && hasAssociatedValue) return true;
+    return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
 
   function isSerializedPrivateJwk(sample, truncated) {
