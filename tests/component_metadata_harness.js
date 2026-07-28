@@ -112,6 +112,10 @@ async function main() {
         name: "Authorization",
         val: "OPAQUE_VAL_SECRET",
       },
+      {
+        Key: "Authorization",
+        Value: "OPAQUE_DOTNET_DESCRIPTOR",
+      },
     ],
     rows: [{name: "SECRET_NESTED_ROW"}],
     longLabel: "x".repeat(600),
@@ -169,6 +173,10 @@ async function main() {
         "OPAQUE_FLAT_HEADER_SECRET",
         "Accept",
         "application/json",
+      ],
+      subscriptionHeaders: [
+        "Ocp-Apim-Subscription-Key",
+        "OPAQUE_SUBSCRIPTION_KEY",
       ],
       jwt: "SECRET_JWT_KEY",
       pwd: "OPAQUE_PWD_VALUE",
@@ -270,6 +278,7 @@ async function main() {
   assert.match(diagnostic.metadata.fieldMeta.rows, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.fields[1], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.fieldMeta.fields[2], /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.fieldMeta.fields[3], /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.qinfo.samples, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.queryData, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.metadataRows, /已省略潜在行数据/);
@@ -280,6 +289,7 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.headers[4], /已省略敏感名称\/值元组/);
   assert.match(diagnostic.metadata.qinfo.headerLines, /已省略敏感名称\/值元组/);
   assert.match(diagnostic.metadata.qinfo.rawHeaders, /已省略敏感名称\/值元组/);
+  assert.match(diagnostic.metadata.qinfo.subscriptionHeaders, /已省略敏感名称\/值元组/);
   assert.match(diagnostic.metadata.qinfo.note, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.connection, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.recordList, /已省略潜在行数据/);
@@ -343,6 +353,7 @@ async function main() {
     "SECRET_JWT_KEY",
     "SECRET_RAW_JWT",
     "OPAQUE_VAL_SECRET",
+    "OPAQUE_DOTNET_DESCRIPTOR",
     "OPAQUE_PWD_VALUE",
     "OPAQUE_PASSWD_VALUE",
     "OPAQUE_PASSPHRASE_VALUE",
@@ -375,6 +386,7 @@ async function main() {
     "SECRET_INHERITED_OPTION",
     "OPAQUE_ACCOUNT_KEY",
     "OPAQUE_AWS_SECRET",
+    "OPAQUE_SUBSCRIPTION_KEY",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
