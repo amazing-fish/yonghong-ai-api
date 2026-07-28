@@ -164,6 +164,8 @@ async function main() {
   const collisionKeyB = `${collisionPrefix}B`;
   runtimeOptions[collisionKeyA] = {expression: "FIRST_COLLISION_FORMULA"};
   runtimeOptions[collisionKeyB] = {expression: "SECOND_COLLISION_FORMULA"};
+  runtimeOptions.aggregateFunctions = ["SUM", "AVG"];
+  runtimeOptions.formulaExpressions = ["failure_count / total_count", "revenue - cost"];
 
   const primaryDate = new Date("2026-07-28T00:00:00.000Z");
   primaryDate.toISOString = () => "Bearer OPAQUE_DATE_ISO_TOKEN";
@@ -204,6 +206,7 @@ async function main() {
       azureUrl: "https://example.com/blob?sv=2024-11-04&sig=OPAQUE_AZURE_SAS_SIGNATURE",
       awsUrl: "https://example.com/object?X-Amz-Credential=OPAQUE_AWS_CREDENTIAL&X-Amz-Signature=OPAQUE_AWS_SIGNATURE",
       encodedUrl: "https%3A%2F%2Fexample.com%2Fobject%3FX-Amz-Signature%3DOPAQUE_ENCODED_AWS_SIGNATURE",
+      encodedEndpointText: "https%3A%2F%2Fexample.com%2Fapi%3Ftoken%3DOPAQUE_ENCODED_GENERIC_TOKEN",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
@@ -327,10 +330,12 @@ async function main() {
   assert.deepStrictEqual(
     diagnostic.metadataCandidateKeys,
     [
+      "aggregateFunctions",
       "cryptoMeta",
       "dateMeta",
       "downloadMeta",
       "fieldMeta",
+      "formulaExpressions",
       collisionOutputKey,
       `${collisionOutputKey}#2`,
       "headers",
@@ -361,6 +366,7 @@ async function main() {
   assert.match(diagnostic.boundSources[1], /\[键已截断\]$/);
   assert.ok(diagnostic.boundSources[1].length < 200);
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
+  assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.serializedPrivate, /已省略可能包含凭证的字符串/);
@@ -376,6 +382,7 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.azureUrl, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.awsUrl, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUrl, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.encodedEndpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.databaseSettings, /已省略可能包含凭证的字符串/);
@@ -402,6 +409,10 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
+  assert.deepStrictEqual(
+    diagnostic.metadata.formulaExpressions,
+    ["failure_count / total_count", "revenue - cost"],
+  );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.strictEqual(diagnostic.metadata.fieldMeta.self, "[循环引用]");
@@ -533,6 +544,7 @@ async function main() {
     "OPAQUE_AWS_CREDENTIAL",
     "OPAQUE_AWS_SIGNATURE",
     "OPAQUE_ENCODED_AWS_SIGNATURE",
+    "OPAQUE_ENCODED_GENERIC_TOKEN",
     "OPAQUE_ENCODED_URL_PASSWORD",
     "OPAQUE_DOUBLE_ENCODED_URL_PASSWORD",
     "OPAQUE_GENERIC_QUERY_TOKEN",
