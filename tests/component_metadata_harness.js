@@ -174,6 +174,7 @@ async function main() {
     {name: "revenue", role: "measure"},
   ];
   runtimeOptions.formulaExpressions = ["failure_count / total_count", "revenue - cost"];
+  runtimeOptions.roles = ["dimension", "measure"];
 
   const primaryDate = new Date("2026-07-28T00:00:00.000Z");
   primaryDate.toISOString = () => "Bearer OPAQUE_DATE_ISO_TOKEN";
@@ -198,6 +199,7 @@ async function main() {
       recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
       netrcSettings: "machine registry.example login build password OPAQUE_NETRC_PASSWORD",
+      oracleDsn: "jdbc:oracle:thin:demo/OPAQUE_ORACLE_DSN_PASSWORD@db.example:1521/service",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       subclassedSettings: new (class extends String {})("token=OPAQUE_STRING_SUBCLASS_TOKEN"),
@@ -394,6 +396,7 @@ async function main() {
       "hugeMeta",
       "prototypeMeta",
       "qinfo",
+      "roles",
       "schemaMeta",
     ],
   );
@@ -420,6 +423,7 @@ async function main() {
   assert.ok(diagnostic.boundSources[1].length < 200);
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
+  assert.deepStrictEqual(diagnostic.metadata.roles, ["dimension", "measure"]);
   assert.match(diagnostic.metadata.configMeta.boxedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.commandSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.connectionDsn, /已省略可能包含凭证的字符串/);
@@ -433,6 +437,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.netrcSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.oracleDsn, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.subclassedSettings, /已省略可能包含凭证的字符串/);
@@ -668,6 +673,7 @@ async function main() {
     "OPAQUE_QUOTED_COMMAND_PASSWORD",
     "OPAQUE_TRUNCATED_XML_PASSWORD",
     "OPAQUE_SERIALIZED_TUPLE_TOKEN",
+    "OPAQUE_ORACLE_DSN_PASSWORD",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
