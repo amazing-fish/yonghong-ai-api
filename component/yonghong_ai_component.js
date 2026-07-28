@@ -608,8 +608,8 @@
     var compactText = text.replace(/[-_.\s]/g, "");
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
-    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|byid|bykey|byindex|byposition|byordinal|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
-    if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|byid|bykey|byindex|byposition|byordinal|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
+    if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
+    if (/^(?:cells?|cellvalues?|cellmetadata|cellmeta)(?:data|values?|map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (isStructuralMetadataCollectionKey(compactText)) return false;
     if (/metadata$/i.test(text)) return false;
     return /(?:data|datasets?|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|responses?|outputs?|entries?|items?|list|payload|content)$/i.test(text);
@@ -786,6 +786,9 @@
     var result = value;
     for (var pass = 0; pass < 3; pass += 1) {
       var normalized = result
+        .replace(/\\u([0-9a-f]{4})/gi, function (_, hex) {
+          return String.fromCharCode(parseInt(hex, 16));
+        })
         .replace(/\\u0022/gi, "\"")
         .replace(/\\u0027/gi, "'")
         .replace(/\\u003a/gi, ":")
