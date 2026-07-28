@@ -623,8 +623,9 @@
     var text = String(key);
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
+      /^[A-Za-z][A-Za-z0-9]*(?:Token|Secret|Password|Passwd|Pwd|Passphrase|Credential|SessionId)$/.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
-      /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|webhook(?:[-_.]?(?:url|uri|endpoint))?|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)|csrf/i.test(text)
+      /(?:^|[^a-z0-9])(?:pass|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|session|credential|csrf)(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|webhook(?:[-_.]?(?:url|uri|endpoint))?|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)/i.test(text)
     );
   }
 
@@ -779,7 +780,7 @@
         value.length > CONFIG.METADATA_MAX_STRING_CHARS &&
         /(?:^|[\s;,])(?:jdbc:oracle:thin:)?[^\/\s@:]+\/[^@\s\/]{32,}$/i.test(inspectionSample)
       ) ||
-      /[?&](?:code|auth[-_]?code|authorization[-_]?code|key|sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
+      /[?&#](?:code|auth[-_]?code|authorization[-_]?code|key|sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(inspectionSample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(inspectionSample)
     );
@@ -846,6 +847,17 @@
         return true;
       }
     }
+    var elementLabelPattern = /<\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>\s*([^<]+?)\s*<\s*\/\s*(?:[a-z0-9_.-]+:)?(?:name|key|header|label)\s*>/gi;
+    var elementLabelMatch;
+    var hasSensitiveElementLabel = false;
+    while ((elementLabelMatch = elementLabelPattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(elementLabelMatch[1].trim())) {
+        hasSensitiveElementLabel = true;
+        break;
+      }
+    }
+    var hasElementValue = /<\s*(?:[a-z0-9_.-]+:)?(?:value|values|val|data|content|text)\s*>\s*[^<]+/i.test(sample);
+    if (hasSensitiveElementLabel && hasElementValue) return true;
     var incompleteTagStart = sample.lastIndexOf("<");
     if (
       truncated &&
