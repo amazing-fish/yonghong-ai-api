@@ -743,11 +743,11 @@
   }
 
   function isSensitiveMetadataAssignment(sample) {
-    return /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
+    return /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample);
   }
 
   function isSensitiveMetadataXml(sample) {
-    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:authorization|cookie|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
+    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
     var tagPattern = /<[^>]*>/g;
