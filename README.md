@@ -129,8 +129,10 @@ var container = document.getElementById($container);
 
 1. 如果 `metadataCandidateKeys` 和 `metadata` 中出现了字段定义，可据此为当前永洪版本增加自动映射；
 2. 如果候选元数据为空，说明当前自定义绘图运行时仍只暴露 `columnN`，需要继续使用可选字段映射，或改用永洪插件/WebAPI 元数据接口；
-3. 诊断会排除 `options.data`、顶层 `columnN` 值、函数、DOM 对象，以及 Cookie、Token、Session、密码和密钥类字段，并限制递归深度、数组项数、对象键数与字符串长度；
+3. 诊断会排除 `options.data`、顶层 `columnN` 值、`queryData`/`metadataRows` 等行数据候选、函数、DOM 对象，以及 Cookie、Token、Session、密码和密钥类字段；
 4. 剪贴板权限被浏览器阻止时，JSON 仍会显示在组件下方，可手动复制。
+
+诊断同时限制候选数、递归深度、数组项数、对象键数、单字符串长度、全局节点数、全局字符数和最终 JSON 长度，避免异常元数据对象冻结看板。
 
 字段映射是可选的，例如：
 
