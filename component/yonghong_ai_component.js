@@ -623,6 +623,7 @@
     var text = String(key);
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
+      /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
       /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|client.?key(?:.?data)?|private.?key|csrf/i.test(text)
     );
   }
@@ -805,6 +806,7 @@
   function isSensitiveMetadataAssignment(sample) {
     return (
       /(?:^|[^A-Za-z0-9])[A-Za-z][A-Za-z0-9]*Pass["']?\s*[:=]/.test(sample) ||
+      /(?:^|[^A-Za-z0-9])(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS["']?\s*[:=]/.test(sample) ||
       /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample)
     );
   }
