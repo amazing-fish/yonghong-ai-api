@@ -6,7 +6,9 @@ const path = require("path");
 async function main() {
   const elements = Object.create(null);
   const appended = [];
-  let rendered = false;
+  let rendered = true;
+  let legacyUi = true;
+  let renderResetCount = 0;
   let clipboardText = "";
 
   const container = {
@@ -22,6 +24,7 @@ async function main() {
     },
     querySelector(selector) {
       if (!rendered) return null;
+      if (legacyUi && selector === '[data-action="copyMetadata"]') return null;
       if (!elements[selector]) elements[selector] = {};
       return elements[selector];
     },
@@ -29,8 +32,26 @@ async function main() {
   Object.defineProperty(container, "innerHTML", {
     set() {
       rendered = true;
+      legacyUi = false;
+      renderResetCount += 1;
     },
   });
+  container.__yhAiState = {
+    initialized: true,
+    busy: false,
+    boundRows: [],
+    boundFields: [],
+    history: [],
+    settings: {
+      mode: "options_data",
+      dataset: "event_summary",
+      fieldDefinitions: [],
+      action: "",
+      xmlData: "",
+      params: {},
+      rowsPath: "",
+    },
+  };
 
   global.document = {
     title: "metadata harness",
@@ -146,8 +167,12 @@ async function main() {
       connection: "UID=user;PWD=OPAQUE_CONNECTION_SECRET",
       recordList: [{name: "SECRET_NESTED_RECORD_LIST"}],
       fieldItems: [{name: "SECRET_NESTED_FIELD_ITEMS"}],
+      resultSet: [{name: "SECRET_NESTED_RESULT_SET"}],
+      recordSet: [{name: "SECRET_NESTED_RECORD_SET"}],
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
+      encryptionKey: "OPAQUE_ENCRYPTION_KEY",
+      signingKey: "OPAQUE_SIGNING_KEY",
       cookie: "SECRET_COOKIE",
       samples: [{name: "SECRET_SAMPLE"}],
       queryData: [{name: "SECRET_NESTED_QUERY_ROW"}],
@@ -158,6 +183,7 @@ async function main() {
     sessionToken: "SECRET_TOP_LEVEL_TOKEN",
     queryData: [{name: "SECRET_QUERY_ROW"}],
     queryList: [{name: "SECRET_QUERY_LIST"}],
+    queryResultSet: [{name: "SECRET_QUERY_RESULT_SET"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
@@ -167,6 +193,7 @@ async function main() {
   global.options = runtimeOptions;
 
   require(path.resolve(__dirname, "../component/yonghong_ai_component.js"));
+  assert.strictEqual(renderResetCount, 1, "legacy UI should be rebuilt for the metadata action");
   await elements['[data-action="copyMetadata"]'].onclick();
 
   assert.ok(clipboardText, "diagnostic should be copied");
@@ -176,7 +203,10 @@ async function main() {
     diagnostic.metadataCandidateKeys,
     ["fieldMeta", "headers", "hugeMeta", "qinfo", "schemaMeta"],
   );
-  assert.deepStrictEqual(diagnostic.omittedRowCandidateKeys, ["metadataRows", "queryData", "queryList"]);
+  assert.deepStrictEqual(
+    diagnostic.omittedRowCandidateKeys,
+    ["metadataRows", "queryData", "queryList", "queryResultSet"],
+  );
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
   assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
   assert.strictEqual(diagnostic.optionKeyScan.scanTruncated, false);
@@ -207,12 +237,16 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.connection, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.qinfo.recordList, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.fieldItems, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.resultSet, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.recordSet, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.qinfo.numericPrecision, "[已省略 BigInt]");
   assert.strictEqual(diagnostic.metadata.qinfo.marker, "[已省略 Symbol]");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "jwt"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "pwd"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passwd"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passphrase"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "encryptionKey"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "signingKey"));
   assert.match(diagnostic.metadata.headers, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "cookie"));
   assert.strictEqual(diagnostic.metadata.hugeMeta.__truncatedKeys, true);
@@ -255,7 +289,12 @@ async function main() {
     "SECRET_QUERY_LIST",
     "SECRET_NESTED_RECORD_LIST",
     "SECRET_NESTED_FIELD_ITEMS",
+    "SECRET_NESTED_RESULT_SET",
+    "SECRET_NESTED_RECORD_SET",
+    "SECRET_QUERY_RESULT_SET",
     "SECRET_SYMBOL_DESCRIPTION",
+    "OPAQUE_ENCRYPTION_KEY",
+    "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
