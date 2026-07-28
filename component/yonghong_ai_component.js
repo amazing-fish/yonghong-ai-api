@@ -624,7 +624,7 @@
     return (
       /^[A-Za-z][A-Za-z0-9]*Pass$/.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
-      /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)|csrf/i.test(text)
+      /(?:^|[^a-z0-9])pass(?:$|[^a-z0-9])|auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|account.?key|subscription.?key|shared.?access|sas.?token|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|webhook(?:[-_.]?(?:url|uri|endpoint))?|client.?cert|client.?key(?:.?data)?|private.?key|key.?store|pfx|p12|pkcs.?(?:12|#12)|csrf/i.test(text)
     );
   }
 
@@ -764,6 +764,7 @@
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(inspectionSample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]+/i.test(inspectionSample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s@]+@/i.test(normalizedUrlSample) ||
+      /https?:\/\/(?:hooks\.slack\.com\/services|(?:canary\.)?discord(?:app)?\.com\/api\/webhooks)\//i.test(normalizedUrlSample) ||
       /(?:^|[\s;,])[^:\s@\/]+:[^@\s\/]+@(?:tcp|unix)\([^)\s]*\)(?:\/|$)/i.test(inspectionSample) ||
       /(?:^|[\s;,])(?:jdbc:oracle:thin:)?[^\/\s@:]+\/[^@\s\/]+@(?:\[[^\]]+\]|[a-z0-9_.-]+)(?::\d+)?(?:\/[^\s]*)?/i.test(inspectionSample) ||
       (
@@ -807,7 +808,7 @@
     return (
       /(?:^|[^A-Za-z0-9])[A-Za-z][A-Za-z0-9]*Pass["']?\s*[:=]/.test(sample) ||
       /(?:^|[^A-Za-z0-9])(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS["']?\s*[:=]/.test(sample) ||
-      /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample)
+      /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|webhook(?:[-_.]?(?:url|uri|endpoint))?|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample)
     );
   }
 
@@ -829,7 +830,7 @@
   }
 
   function isSensitiveMetadataXml(sample, truncated) {
-    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|pass|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
+    var sensitiveElement = /<\s*(?:[a-z0-9_.-]+:)?(?:auth|authorization|cookie|pass|webhook(?:[-_.]?(?:url|uri|endpoint))?|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token)\b[^>]*>/i;
     if (sensitiveElement.test(sample)) return true;
 
     var tagPattern = /<[^>]*>/g;
@@ -857,8 +858,8 @@
   }
 
   function isSerializedSensitiveDescriptor(sample, truncated) {
-    if (!/\{\s*["']/.test(sample)) return false;
-    var labelPattern = /["'](?:name|key|header|header[-_.]?name|label)["']\s*:\s*["']([^"']+)["']/gi;
+    if (!/\{\s*(?:["']|[A-Za-z_$])/.test(sample)) return false;
+    var labelPattern = /["']?(?:name|key|header|header[-_.]?name|label)["']?\s*:\s*["']([^"']+)["']/gi;
     var labelMatch;
     var hasSensitiveLabel = false;
     while ((labelMatch = labelPattern.exec(sample)) !== null) {
@@ -867,7 +868,7 @@
         break;
       }
     }
-    var hasAssociatedValue = /["'](?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']\s*:/i.test(sample);
+    var hasAssociatedValue = /["']?(?:value|values|val|data|content|text|header[-_.]?value|default[-_.]?value|current[-_.]?value|raw[-_.]?value)["']?\s*:/i.test(sample);
     if (hasSensitiveLabel && hasAssociatedValue) return true;
     return truncated && (hasSensitiveLabel || hasAssociatedValue);
   }
