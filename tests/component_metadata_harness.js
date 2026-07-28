@@ -104,6 +104,8 @@ async function main() {
   const fieldMeta = {
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
+    memberMap: {member_2: {caption: "SECRET_MEMBER_MAP"}},
+    sessionCookie: "SID=OPAQUE_SESSION_COOKIE_VALUE",
     fields: [
       {
         name: "failure_rate",
@@ -618,6 +620,8 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembersById, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.fieldMeta.memberMap, /已省略潜在行数据/);
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.fieldMeta, "sessionCookie"));
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.deepStrictEqual(diagnostic.metadata.fieldMeta.choiceDefinitions, [{label: "Enabled", value: "enabled"}]);
   assert.deepStrictEqual(diagnostic.metadata.fieldList, [
