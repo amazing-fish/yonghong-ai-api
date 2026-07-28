@@ -211,6 +211,8 @@ async function main() {
             author: {type: "string"},
             region: {type: "string"},
             revenue: {type: "number"},
+            secretary: {type: "string"},
+            tokenizer: {type: "string"},
           },
         },
       },
@@ -310,7 +312,7 @@ async function main() {
       encodedParameterName: "https://example.com/cb?access%5Ftoken=OPAQUE_ENCODED_PARAMETER_NAME_TOKEN",
       encodedUserinfo: "redis%3A%2F%2F%3AOPAQUE_ENCODED_URL_PASSWORD%40example.com%2F0",
       doubleEncodedUserinfo: "redis%253A%252F%252F%253AOPAQUE_DOUBLE_ENCODED_URL_PASSWORD%2540example.com%252F0",
-      endpointText: "https://example.com/cb?code=OPAQUE_AUTHORIZATION_CODE",
+      endpointText: "https://example.com/cb#code=OPAQUE_AUTHORIZATION_CODE",
       javaHeaderText: "JSESSIONID=OPAQUE_JAVA_SESSION_ID",
       phpHeaderText: "PHPSESSID=OPAQUE_PHP_SESSION_ID",
       aspHeaderText: "ASP.NET_SessionId=OPAQUE_ASP_SESSION_ID",
@@ -325,7 +327,7 @@ async function main() {
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
       serializedHeaderTuple: "[\"Authorization\",\"OPAQUE_SERIALIZED_TUPLE_TOKEN\"]",
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
-      xmlDescriptor: "<property name=\"password\" value=\"OPAQUE_XML_DESCRIPTOR_PASSWORD\"/>",
+      xmlDescriptor: "<property><name>password</name><value>OPAQUE_XML_DESCRIPTOR_PASSWORD</value></property>",
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
       xmlCamelDescriptor: "<property name=\"dbPassword\" value=\"OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD\"/>",
       xmlCamelElement: "<dbPassword>OPAQUE_XML_CAMEL_PASSWORD</dbPassword>",
@@ -495,6 +497,8 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.author, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.revenue, /对象层级已截断/);
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.secretary, /对象层级已截断/);
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.tokenizer, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.quotedCommandSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.queryDataById, /已省略潜在行数据/);
