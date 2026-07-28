@@ -122,7 +122,15 @@ var container = document.getElementById($container);
 - 不配置字段映射也能提交全部绑定值；字段名保持 `columnN`，角色为 `unknown`；
 - 为了让模型理解业务语义，可以在“字段映射 JSON”中按绑定顺序补充业务名和角色；
 - 计算列只要拖入当前组件，其计算结果会像普通字段一样提交；但显示名和计算表达式不能从已公开的 `options.data` 自动读取；
-- “测试取数与字段”会显示 `options` 的运行时键、识别到的全部字段及样例数据。如果特定永洪版本额外提供了元数据键，可以根据该诊断结果继续适配。
+- “测试取数与字段”会显示 `options` 的运行时键、识别到的全部字段及样例数据。
+- “复制元数据诊断”会进一步读取部署中可能存在的字段、别名、维度、度量、聚合或计算表达式元数据，并将经过脱敏和限长的 JSON 复制到剪贴板。该诊断只在浏览器本地生成，不会提交到 AI API。
+
+在真实永洪看板中点击“复制元数据诊断”：
+
+1. 如果 `metadataCandidateKeys` 和 `metadata` 中出现了字段定义，可据此为当前永洪版本增加自动映射；
+2. 如果候选元数据为空，说明当前自定义绘图运行时仍只暴露 `columnN`，需要继续使用可选字段映射，或改用永洪插件/WebAPI 元数据接口；
+3. 诊断会排除 `options.data`、顶层 `columnN` 值、函数、DOM 对象，以及 Cookie、Token、Session、密码和密钥类字段，并限制递归深度、数组项数、对象键数与字符串长度；
+4. 剪贴板权限被浏览器阻止时，JSON 仍会显示在组件下方，可手动复制。
 
 字段映射是可选的，例如：
 
@@ -313,6 +321,8 @@ MODEL_MAX_TOTAL_WAIT_SECONDS=30
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
+node --check .\component\yonghong_ai_component.js
+node .\tests\component_metadata_harness.js
 ```
 
 ## 安全说明
