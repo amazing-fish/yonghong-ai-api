@@ -198,6 +198,7 @@ async function main() {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         keyStore: "OPAQUE_PKCS12_BASE64",
+        webhookUrl: "https://hooks.slack.com/services/T123/B456/OPAQUE_WEBHOOK_SECRET",
       },
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       jsonSchema: {
@@ -318,7 +319,7 @@ async function main() {
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       repositoryEndpoint: "https://ghp_OPAQUE_TOKEN_ONLY_USERINFO@github.com/org/repo.git",
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
-      serializedDescriptor: "{\"name\":\"password\",\"value\":\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
+      serializedDescriptor: "{name:\"password\",value:\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
       serializedHeaderTuple: "[\"Authorization\",\"OPAQUE_SERIALIZED_TUPLE_TOKEN\"]",
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
@@ -483,6 +484,7 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "webhookUrl"));
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
