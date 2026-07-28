@@ -125,6 +125,10 @@ async function main() {
       truncatedDescriptor,
     ],
     rows: [{name: "SECRET_NESTED_ROW"}],
+    headerDescriptor: {
+      headerName: "Authorization",
+      headerValue: "OPAQUE_HEADER_VALUE_DESCRIPTOR",
+    },
     longLabel: "x".repeat(600),
     choices: ["a", "b", "c", "d", "e", "f"],
   };
@@ -178,6 +182,7 @@ async function main() {
   Object.assign(runtimeOptions, {
     configMeta: {
       boxedSettings: new String("password=OPAQUE_BOXED_STRING_PASSWORD"),
+      connectionDsn: "demo:OPAQUE_SCHEMELESS_DSN_PASSWORD@tcp(db:3306)/app",
       connectionSettings: "{\"user\":\"demo\",\"pass\":\"OPAQUE_SERIALIZED_PASS_VALUE\"}",
       cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
@@ -406,6 +411,7 @@ async function main() {
   assert.strictEqual(diagnostic.limits.maxKeyChars, 120);
   assert.deepStrictEqual(diagnostic.metadata.aggregateFunctions, ["SUM", "AVG"]);
   assert.match(diagnostic.metadata.configMeta.boxedSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.connectionDsn, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.connectionSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
@@ -473,6 +479,7 @@ async function main() {
   );
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].name, "failure_rate");
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
+  assert.match(diagnostic.metadata.fieldMeta.headerDescriptor, /已省略敏感名称\/值描述符/);
   assert.strictEqual(diagnostic.metadata.fieldMeta.self, "[循环引用]");
   assert.strictEqual(diagnostic.metadata.fieldMeta.choices.length, 6);
   assert.match(diagnostic.metadata.fieldMeta.choices[5], /其余 1 项已省略/);
@@ -635,6 +642,8 @@ async function main() {
     "OPAQUE_UNICODE_ESCAPED_PASSWORD",
     "OPAQUE_BOXED_STRING_PASSWORD",
     "OPAQUE_STRING_SUBCLASS_TOKEN",
+    "OPAQUE_SCHEMELESS_DSN_PASSWORD",
+    "OPAQUE_HEADER_VALUE_DESCRIPTOR",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
