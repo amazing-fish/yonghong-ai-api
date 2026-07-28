@@ -606,7 +606,7 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     var compactText = text.replace(/[-_.\s]/g, "");
-    if (/^(?:dimension|hierarchy|level)members?(?:list|items|collections?)?$/i.test(compactText)) return true;
+    if (/^(?:dimension|hierarchy|level)members?(?:list|items|collections?|map|by[a-z0-9]+|lookup|index|dictionary|dict)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?)(?:data|values?|metadata|meta|info)?$/i.test(compactText)) return true;
     if (/^(?:rows?|records?|cells?)(?:data|values?|metadata|meta|info)?collections?$/i.test(compactText)) return true;
     if (/^(?:query)?(?:data|rows?|records?|rowdata|recorddata|rowmetadata|recordmetadata|results?|resultsets?|responses?|outputs?|entries?|items?|values?|samples?|examples?|payload|content)(?:map|by[a-z0-9]+|lookup|index|dictionary|dict)$/i.test(compactText)) return true;
@@ -628,6 +628,7 @@
       /(?:password|passwd|pwd)[-_.]?(?:hash|digest)$/i.test(text) ||
       /(?:authorization|auth)[-_.]?code$/i.test(text) ||
       /^session[-_.]?id$/i.test(text) ||
+      /^(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)$/i.test(text) ||
       /^(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS$/.test(text) ||
       hasSensitiveMetadataKeyAlias(text) ||
       /(?:^|[^a-z0-9])(?:pass|bearers?|cookies?|tokens?|jwts?|secrets?|passwords?|passwds?|pwds?|passphrases?|sessions?|credentials?|csrf)(?:$|[^a-z0-9])|(?:^|[^a-z0-9])auth(?:s|entication|orization)?(?:$|[^a-z0-9])|auth(?:entication|orization)?[-_]?(?:token|header|value|config|settings?)|(?:basic|bearer|proxy)[-_]?auth/i.test(text)
