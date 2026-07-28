@@ -169,8 +169,11 @@ async function main() {
       fieldItems: [{name: "SECRET_NESTED_FIELD_ITEMS"}],
       resultSet: [{name: "SECRET_NESTED_RESULT_SET"}],
       recordSet: [{name: "SECRET_NESTED_RECORD_SET"}],
+      queryResponse: [{name: "SECRET_NESTED_QUERY_RESPONSE"}],
+      queryOutput: [{name: "SECRET_NESTED_QUERY_OUTPUT"}],
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
+      endpoint: "https://alice:OPAQUE_URL_CREDENTIAL@example.com/path",
       encryptionKey: "OPAQUE_ENCRYPTION_KEY",
       signingKey: "OPAQUE_SIGNING_KEY",
       cookie: "SECRET_COOKIE",
@@ -184,6 +187,7 @@ async function main() {
     queryData: [{name: "SECRET_QUERY_ROW"}],
     queryList: [{name: "SECRET_QUERY_LIST"}],
     queryResultSet: [{name: "SECRET_QUERY_RESULT_SET"}],
+    queryResponse: [{name: "SECRET_QUERY_RESPONSE"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
@@ -205,7 +209,7 @@ async function main() {
   );
   assert.deepStrictEqual(
     diagnostic.omittedRowCandidateKeys,
-    ["metadataRows", "queryData", "queryList", "queryResultSet"],
+    ["metadataRows", "queryData", "queryList", "queryResponse", "queryResultSet"],
   );
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
   assert.strictEqual(diagnostic.optionKeyScan.displayTruncated, true);
@@ -239,8 +243,11 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.fieldItems, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.resultSet, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.recordSet, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.queryResponse, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.queryOutput, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.qinfo.numericPrecision, "[已省略 BigInt]");
   assert.strictEqual(diagnostic.metadata.qinfo.marker, "[已省略 Symbol]");
+  assert.match(diagnostic.metadata.qinfo.endpoint, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "jwt"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "pwd"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.qinfo, "passwd"));
@@ -292,7 +299,11 @@ async function main() {
     "SECRET_NESTED_RESULT_SET",
     "SECRET_NESTED_RECORD_SET",
     "SECRET_QUERY_RESULT_SET",
+    "SECRET_NESTED_QUERY_RESPONSE",
+    "SECRET_NESTED_QUERY_OUTPUT",
+    "SECRET_QUERY_RESPONSE",
     "SECRET_SYMBOL_DESCRIPTION",
+    "OPAQUE_URL_CREDENTIAL",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
   ].forEach((secret) => {
