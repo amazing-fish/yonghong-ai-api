@@ -57,7 +57,9 @@
 
   // 永洪在字段绑定或筛选刷新时可能清空容器 DOM，但保留挂载在
   // container 上的状态对象。此时 initialized 仍为 true，必须重新构建界面。
-  var uiExists = !!container.querySelector('[data-action="send"]');
+  var uiExists =
+    !!container.querySelector('[data-action="send"]') &&
+    !!container.querySelector('[data-action="copyMetadata"]');
   if (!state.initialized || !uiExists) {
     render();
   }
@@ -595,11 +597,11 @@
   function isTopLevelRowDataKey(key) {
     var text = String(key);
     if (/metadata$/i.test(text)) return false;
-    return /(?:data|rows?|records?|values?|samples?|examples?|results?|items?|list|payload|content)$/i.test(text);
+    return /(?:data|rows?|records?|(?:result|record)sets?|values?|samples?|examples?|results?|items?|list|payload|content)$/i.test(text);
   }
 
   function isSensitiveMetadataKey(key) {
-    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
+    return /auth|bearer|cookie|token|jwt|secret|password|passwd|pwd|passphrase|api.?key|access.?key|encryption.?key|signing.?key|master.?key|symmetric.?key|session|credential|client.?cert|private.?key|csrf/i.test(String(key));
   }
 
   function isNestedRowDataKey(key) {
