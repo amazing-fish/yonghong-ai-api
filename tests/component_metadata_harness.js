@@ -203,6 +203,7 @@ async function main() {
       mailSettings: {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         apiKeys: {production: "OPAQUE_API_KEY"},
+        apiKeysByTenant: {production: "OPAQUE_TENANT_API_KEY"},
         accessTokens: {production: "OPAQUE_ACCESS_TOKEN"},
         accessTokensByUser: {alice: "OPAQUE_USER_ACCESS_TOKEN"},
         accessTokenString: "OPAQUE_ACCESS_TOKEN_STRING",
@@ -236,6 +237,7 @@ async function main() {
           },
           properties: {
             author: {type: "string"},
+            data: {type: "string"},
             privateKeyboard: {type: "string"},
             region: {type: "string"},
             revenue: {type: "number"},
@@ -519,6 +521,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.databaseSettings, /已省略可能包含凭证的字符串/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "apiKeys"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "apiKeysByTenant"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokens"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokensByUser"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokenString"));
@@ -548,6 +551,7 @@ async function main() {
     ["billing_address"],
   );
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.author, /对象层级已截断/);
+  assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.data, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.privateKeyboard, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.region, /对象层级已截断/);
   assert.match(diagnostic.metadata.configMeta.jsonSchema.items.properties.revenue, /对象层级已截断/);
