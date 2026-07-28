@@ -183,6 +183,7 @@ async function main() {
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
+      recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
@@ -337,6 +338,7 @@ async function main() {
     queryFieldDataset: [{region: "SECRET_QUERY_FIELD_DATASET"}],
     queryBundle: [null, null, null, "SECRET_QUERY_BUNDLE", 42],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
+    rowMetadata: [{name: "SECRET_ROW_METADATA"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     prototypeMeta,
     schemaMeta,
@@ -389,6 +391,7 @@ async function main() {
       "queryList",
       "queryResponse",
       "queryResultSet",
+      "rowMetadata",
     ],
   );
   assert.ok(!diagnostic.optionsKeys.includes("fieldMeta"));
@@ -405,6 +408,7 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.serviceSettings, /已省略可能包含凭证的字符串/);
@@ -641,6 +645,8 @@ async function main() {
     "OPAQUE_TOKEN_ONLY_USERINFO",
     "OPAQUE_ENCRYPTION_KEY",
     "OPAQUE_SIGNING_KEY",
+    "SECRET_NESTED_RECORD_METADATA",
+    "SECRET_ROW_METADATA",
   ].forEach((secret) => {
     assert.ok(!clipboardText.includes(secret), `diagnostic leaked ${secret}`);
   });
