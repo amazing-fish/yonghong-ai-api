@@ -231,10 +231,17 @@ async function main() {
         k: "OPAQUE_SYMMETRIC_JWK_KEY",
       },
       binaryView: new Uint8Array(Buffer.from("OPAQUE_BINARY_VIEW_SECRET")),
+      cellMetadata: [{rowIndex: 0, value: "SECRET_CELL_METADATA_VALUE"}],
       clusterConfig: {
         server: "https://cluster.example.com",
         "client-key-data": "OPAQUE_KUBECONFIG_CLIENT_KEY_DATA",
         clientKeyData: "OPAQUE_CAMEL_KUBECONFIG_CLIENT_KEY_DATA",
+      },
+      compositionSchema: {
+        oneOf: [
+          {type: "object", properties: {region: {type: "string"}}},
+          {type: "string"},
+        ],
       },
       connectionOptions: {
         user: "demo",
@@ -244,6 +251,7 @@ async function main() {
         name: "password",
         "current-value": "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
       },
+      mapsEndpoint: "https://maps.googleapis.com/maps/api/geocode/json?key=OPAQUE_MAPS_API_KEY",
       defaultDescriptor: {
         name: "password",
         default_value: "OPAQUE_DEFAULT_VALUE_DESCRIPTOR",
@@ -479,12 +487,16 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.unicodeEscapedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.backupJwk, /已省略私有 JWK/);
   assert.match(diagnostic.metadata.cryptoMeta.binaryView, /已省略二进制视图/);
+  assert.match(diagnostic.metadata.cryptoMeta.cellMetadata, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.cryptoMeta.clusterConfig.server, "https://cluster.example.com");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "client-key-data"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.clusterConfig, "clientKeyData"));
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.compositionSchema.oneOf[0].type, "object");
+  assert.strictEqual(diagnostic.metadata.cryptoMeta.compositionSchema.oneOf[1].type, "string");
   assert.strictEqual(diagnostic.metadata.cryptoMeta.connectionOptions.user, "demo");
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.cryptoMeta.connectionOptions, "pass"));
   assert.match(diagnostic.metadata.cryptoMeta.currentDescriptor, /已省略敏感名称\/值描述符/);
+  assert.match(diagnostic.metadata.cryptoMeta.mapsEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.cryptoMeta.defaultDescriptor, /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.cryptoMeta.rawDescriptor, /已省略敏感名称\/值描述符/);
   assert.match(diagnostic.metadata.cryptoMeta.signingJwk, /已省略私有 JWK/);
@@ -723,6 +735,8 @@ async function main() {
     "OPAQUE_SERIALIZED_SMTP_PASS",
     "OPAQUE_BINARY_VIEW_SECRET",
     "OPAQUE_LONG_DSN_PASSWORD",
+    "SECRET_CELL_METADATA_VALUE",
+    "OPAQUE_MAPS_API_KEY",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
