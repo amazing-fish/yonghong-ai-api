@@ -189,7 +189,7 @@ async function main() {
   Object.assign(runtimeOptions, {
     configMeta: {
       boxedSettings: new String("password=OPAQUE_BOXED_STRING_PASSWORD"),
-      commandSettings: "--password OPAQUE_COMMAND_PASSWORD",
+      commandSettings: "oauth2-proxy --client-secret OPAQUE_CLIENT_SECRET",
       connectionDsn: "demo:OPAQUE_SCHEMELESS_DSN_PASSWORD@tcp(db:3306)/app",
       connectionSettings: "{\"user\":\"demo\",\"pass\":\"OPAQUE_SERIALIZED_PASS_VALUE\"}",
       cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
@@ -224,7 +224,7 @@ async function main() {
       oracleDsn: "jdbc:oracle:thin:demo/OPAQUE_ORACLE_DSN_PASSWORD@db.example:1521/service",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       serializedHeaderDescriptor: "{\"headerName\":\"Authorization\",\"headerValue\":\"OPAQUE_SERIALIZED_HEADER_VALUE\"}",
-      smtpSettings: "smtpPass=OPAQUE_SERIALIZED_SMTP_PASS",
+      smtpSettings: "name: DB_PASSWORD\nvalue: OPAQUE_YAML_PASSWORD",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       subclassedSettings: new (class extends String {})("token=OPAQUE_STRING_SUBCLASS_TOKEN"),
       unicodeEscapedSettings: "{\\u0022\\u0070assword\\u0022\\u003a\\u0022OPAQUE_UNICODE_ESCAPED_PASSWORD\\u0022}",
