@@ -835,10 +835,20 @@
 
   function isSensitiveMetadataAssignment(sample) {
     return (
+      hasSensitiveMetadataAssignmentKey(sample) ||
       /(?:^|[^A-Za-z0-9])[A-Za-z][A-Za-z0-9]*Pass["']?\s*[:=]/.test(sample) ||
       /(?:^|[^A-Za-z0-9])(?:DB|DATABASE|SMTP|FTP|SFTP|SSH|REDIS|MYSQL|MARIADB|MONGO|MONGODB|PG|POSTGRES|POSTGRESQL|PROXY|CLIENT|SERVICE|ACCOUNT|ADMIN|USER|APP|API)PASS["']?\s*[:=]/.test(sample) ||
       /(?:^|[^a-z0-9])(?:auth|authorization|proxy-authorization|cookie|set-cookie|pass|webhook(?:[-_.]?(?:url|uri|endpoint))?|x[-_]?api[-_]?key|client[-_]?key(?:[-_]?data)?|key[-_]?store|pfx|p12|pkcs[-_]?(?:12|#12)|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample)
     );
+  }
+
+  function hasSensitiveMetadataAssignmentKey(sample) {
+    var assignmentPattern = /(?:^|[^A-Za-z0-9_$.-])["']?([A-Za-z_$][A-Za-z0-9_$.-]{0,120})["']?\s*[:=]/g;
+    var assignmentMatch;
+    while ((assignmentMatch = assignmentPattern.exec(sample)) !== null) {
+      if (isSensitiveMetadataKey(assignmentMatch[1])) return true;
+    }
+    return false;
   }
 
   function isSensitiveWhitespaceMetadataAssignment(sample) {
