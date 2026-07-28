@@ -726,7 +726,7 @@
     return (
       isSerializedPrivateJwk(sample, value.length > sample.length) ||
       isSerializedSensitiveDescriptor(sample, value.length > sample.length) ||
-      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
+      /(?:^|[^a-z0-9])(?:authorization|proxy-authorization|cookie|set-cookie|x[-_]?api[-_]?key|(?:[a-z][a-z0-9]*[-_]?)?(?:token|password|passwd|pwd|passphrase|secret|credential)|(?:[a-z][a-z0-9]*[-_]?)?(?:api|access|account|private|secret|signing|encryption|master|symmetric|subscription)[-_]?key|(?:[a-z][a-z0-9_.-]*)?session[-_]?id|shared[-_]?access[-_]?signature|sas[-_]?token|(?:aws[-_]?)?secret[-_]?access[-_]?key)\b["']?\s*[:=]/i.test(sample) ||
       isSensitiveMetadataXml(sample) ||
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
@@ -737,7 +737,7 @@
       ) ||
       /[?&](?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(normalizedUrlSample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
-      /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
+      /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME|JSESSIONID|PHPSESSID|ASP\.NET_SESSIONID|CONNECT\.SID)\s*=/i.test(sample)
     );
   }
 
