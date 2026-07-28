@@ -195,9 +195,12 @@ async function main() {
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
       packageSettings: "_auth=OPAQUE_NPM_AUTH_VALUE",
       quotedCommandSettings: "--password \"OPAQUE_QUOTED_COMMAND_PASSWORD\"",
+      queryDataById: {row_3: {customer: "SECRET_QUERY_DATA_BY_ID_VALUE"}},
+      recordDataByKey: {row_4: {customer: "SECRET_RECORD_DATA_BY_KEY_VALUE"}},
       registrySettings: "{\"auths\":{\"registry.example\":{\"auth\":\"OPAQUE_DOCKER_AUTH_VALUE\"}}}",
       recordMetadata: [{name: "SECRET_NESTED_RECORD_METADATA"}],
       rowMap: {row_1: {customer: "SECRET_ROW_MAP_VALUE"}},
+      rowDataById: {row_5: {customer: "SECRET_ROW_DATA_BY_ID_VALUE"}},
       rowsById: {row_2: {customer: "SECRET_ROWS_BY_ID_VALUE"}},
       nestedSettings: JSON.stringify(JSON.stringify({password: "OPAQUE_NESTED_JSON_PASSWORD"})),
       netrcSettings: "machine registry.example login build password OPAQUE_NETRC_PASSWORD",
@@ -436,9 +439,12 @@ async function main() {
   assert.match(diagnostic.metadata.configMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.packageSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.quotedCommandSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.configMeta.queryDataById, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.configMeta.recordDataByKey, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.registrySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.recordMetadata, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.rowMap, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.configMeta.rowDataById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.rowsById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.configMeta.nestedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.configMeta.netrcSettings, /已省略可能包含凭证的字符串/);
@@ -683,6 +689,9 @@ async function main() {
     "OPAQUE_SERIALIZED_HEADER_VALUE",
     "SECRET_ROW_MAP_VALUE",
     "SECRET_ROWS_BY_ID_VALUE",
+    "SECRET_QUERY_DATA_BY_ID_VALUE",
+    "SECRET_RECORD_DATA_BY_KEY_VALUE",
+    "SECRET_ROW_DATA_BY_ID_VALUE",
     "OPAQUE_OBJECT_PASS_VALUE",
     "OPAQUE_SERIALIZED_PASS_VALUE",
     "OPAQUE_CURRENT_VALUE_DESCRIPTOR",
