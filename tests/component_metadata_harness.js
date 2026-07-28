@@ -105,9 +105,14 @@ async function main() {
     cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
+    dimensionValuesById: {value_1: {caption: "SECRET_DIMENSION_VALUE_BY_ID"}},
     memberCache: {member_3: {caption: "SECRET_MEMBER_CACHE"}},
     memberMap: {member_2: {caption: "SECRET_MEMBER_MAP"}},
     sessionCookie: "SID=OPAQUE_SESSION_COOKIE_VALUE",
+    signatureHeaders: {
+      "X-Amz-Signature": "OPAQUE_AWS_HEADER_SIGNATURE",
+      "X-Goog-Signature": "OPAQUE_GOOGLE_HEADER_SIGNATURE",
+    },
     fields: [
       {
         name: "failure_rate",
@@ -234,6 +239,9 @@ async function main() {
         },
         definitions: {
           records: {type: "object"},
+        },
+        patternProperties: {
+          data: {type: "string"},
         },
         type: "array",
         items: {
@@ -554,6 +562,7 @@ async function main() {
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.items.type, "object");
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.$defs.data.type, "string");
   assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.definitions.records.type, "object");
+  assert.strictEqual(diagnostic.metadata.configMeta.jsonSchema.patternProperties.data.type, "string");
   assert.deepStrictEqual(diagnostic.metadata.configMeta.jsonSchema.items.required, ["region"]);
   assert.deepStrictEqual(
     diagnostic.metadata.configMeta.jsonSchema.items.dependentRequired.credit_card,
@@ -664,9 +673,11 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.fieldMeta, "cookieHeader"));
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembers, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.dimensionMembersById, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.fieldMeta.dimensionValuesById, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.memberCache, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.fieldMeta.memberMap, /已省略潜在行数据/);
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.fieldMeta, "sessionCookie"));
+  assert.deepStrictEqual(diagnostic.metadata.fieldMeta.signatureHeaders, {});
   assert.strictEqual(diagnostic.metadata.fieldMeta.fields[0].formula, "failure_count / total_count");
   assert.deepStrictEqual(diagnostic.metadata.fieldMeta.choiceDefinitions, [{label: "Enabled", value: "enabled"}]);
   assert.deepStrictEqual(diagnostic.metadata.fieldList, [
