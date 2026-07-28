@@ -209,16 +209,19 @@ async function main() {
       databaseSettings: "{\"dbPassword\":\"OPAQUE_CAMEL_DB_PASSWORD\",\"databasePassword\":\"OPAQUE_CAMEL_DATABASE_PASSWORD\"}",
       endpointText: "https://example.com/api?token=OPAQUE_GENERIC_QUERY_TOKEN",
       environmentText: "OPENAI_API_KEY=OPAQUE_PREFIXED_API_KEY\nDB_PASSWORD=OPAQUE_PREFIXED_DB_PASSWORD",
+      cryptographySettings: "{\"secretKey\":\"OPAQUE_SECRET_KEY_VALUE\",\"privateKey\":\"OPAQUE_PRIVATE_KEY_VALUE\"}",
       longUserinfo: `https://user:${"p".repeat(600)}@example.com/object`,
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serviceSettings: "{\"authenticationToken\":\"OPAQUE_CAMEL_JSON_TOKEN\"}",
       serializedDescriptor: "{\"name\":\"password\",\"value\":\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
+      serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
       serializedSettings: "{\"token\":\"OPAQUE_GENERIC_JSON_TOKEN\"}",
       xmlDescriptor: "<property name=\"password\" value=\"OPAQUE_XML_DESCRIPTOR_PASSWORD\"/>",
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
       xmlCamelDescriptor: "<property name=\"dbPassword\" value=\"OPAQUE_XML_CAMEL_DESCRIPTOR_PASSWORD\"/>",
       xmlCamelElement: "<dbPassword>OPAQUE_XML_CAMEL_PASSWORD</dbPassword>",
+      xmlKeyElement: "<privateKey>OPAQUE_XML_PRIVATE_KEY</privateKey>",
       xmlReversedDescriptor: "<property value=\"OPAQUE_XML_REVERSED_DESCRIPTOR_PASSWORD\" name=\"password\"/>",
       xmlText: "<connection><password>OPAQUE_XML_PASSWORD</password></connection>",
     },
@@ -372,17 +375,20 @@ async function main() {
   assert.match(diagnostic.metadata.downloadMeta.encodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.doubleEncodedUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.databaseSettings, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.cryptographySettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.endpointText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.environmentText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.longUserinfo, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceEndpoint, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serviceSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedDescriptor, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.serializedDescriptorsText, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedReversedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.serializedSettings, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlAttribute, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlCamelDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlCamelElement, /已省略可能包含凭证的字符串/);
+  assert.match(diagnostic.metadata.downloadMeta.xmlKeyElement, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlReversedDescriptor, /已省略可能包含凭证的字符串/);
   assert.match(diagnostic.metadata.downloadMeta.xmlText, /已省略可能包含凭证的字符串/);
@@ -537,6 +543,10 @@ async function main() {
     "OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD",
     "OPAQUE_REVERSED_DESCRIPTOR_PASSWORD",
     "OPAQUE_XML_REVERSED_DESCRIPTOR_PASSWORD",
+    "OPAQUE_SECRET_KEY_VALUE",
+    "OPAQUE_PRIVATE_KEY_VALUE",
+    "OPAQUE_LATER_DESCRIPTOR_PASSWORD",
+    "OPAQUE_XML_PRIVATE_KEY",
     "OPAQUE_SYMMETRIC_JWK_KEY",
     "OPAQUE_PRIVATE_JWK_EXPONENT",
     "OPAQUE_PRIVATE_JWK_PRIME",
