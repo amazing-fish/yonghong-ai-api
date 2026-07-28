@@ -203,11 +203,13 @@ async function main() {
         smtpPass: "OPAQUE_CAMEL_SMTP_PASS",
         apiKeys: {production: "OPAQUE_API_KEY"},
         accessTokens: {production: "OPAQUE_ACCESS_TOKEN"},
+        accessTokensByUser: {alice: "OPAQUE_USER_ACCESS_TOKEN"},
         accessTokenString: "OPAQUE_ACCESS_TOKEN_STRING",
         authorizationCode: "OPAQUE_AUTHORIZATION_CODE_FIELD",
         YHBISESSIONID: "OPAQUE_YONGHONG_SESSION",
         DBPASS: "OPAQUE_UPPERCASE_DB_PASS",
         credentials: "OPAQUE_CREDENTIAL_BLOB",
+        credentialsById: {primary: "OPAQUE_CREDENTIAL_BY_ID"},
         consumerKey: "OPAQUE_OAUTH_CONSUMER_KEY",
         keyStore: "OPAQUE_PKCS12_BASE64",
         oauthCredentials: "OPAQUE_OAUTH_CREDENTIALS",
@@ -357,7 +359,7 @@ async function main() {
       xmlCamelElement: "<dbPassword>OPAQUE_XML_CAMEL_PASSWORD</dbPassword>",
       xmlKeyElement: "<privateKey>OPAQUE_XML_PRIVATE_KEY</privateKey>",
       xmlReversedDescriptor: "<property value=\"OPAQUE_XML_REVERSED_DESCRIPTOR_PASSWORD\" name=\"password\"/>",
-      xmlTruncatedDescriptor: `<property value="OPAQUE_TRUNCATED_XML_PASSWORD" filler="${"x".repeat(600)}" name="password"/>`,
+      xmlTruncatedDescriptor: `<property><value>OPAQUE_TRUNCATED_XML_PASSWORD${"x".repeat(600)}</value><name>password</name></property>`,
       xmlText: "<connection><password>OPAQUE_XML_PASSWORD</password></connection>",
     },
     fieldMeta,
@@ -514,11 +516,13 @@ async function main() {
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "smtpPass"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "apiKeys"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokens"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokensByUser"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "accessTokenString"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "authorizationCode"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "YHBISESSIONID"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "DBPASS"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentials"));
+  assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "credentialsById"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "consumerKey"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "keyStore"));
   assert.ok(!Object.prototype.hasOwnProperty.call(diagnostic.metadata.configMeta.mailSettings, "oauthCredentials"));
