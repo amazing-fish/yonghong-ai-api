@@ -179,6 +179,8 @@ async function main() {
       queryOutput: [{name: "SECRET_NESTED_QUERY_OUTPUT"}],
       entries: [{name: "SECRET_NESTED_ENTRIES"}],
       dataSet: [null, null, null, {region: "SECRET_NESTED_DATASET"}],
+      fieldDataset: [{region: "SECRET_NESTED_FIELD_DATASET"}],
+      bundle: [null, null, null, {region: "SECRET_NESTED_BUNDLE"}],
       numericPrecision: 10n ** 10000n,
       marker: Symbol("SECRET_SYMBOL_DESCRIPTION"),
       endpoint: "https://alice:OPAQUE_URL_CREDENTIAL@example.com/path",
@@ -206,6 +208,8 @@ async function main() {
     queryResponse: [{name: "SECRET_QUERY_RESPONSE"}],
     queryEntries: [{name: "SECRET_QUERY_ENTRIES"}],
     queryDataset: [null, null, null, {region: "SECRET_QUERY_DATASET"}],
+    queryFieldDataset: [{region: "SECRET_QUERY_FIELD_DATASET"}],
+    queryBundle: [null, null, null, {region: "SECRET_QUERY_BUNDLE"}],
     metadataRows: [{name: "SECRET_METADATA_ROW"}],
     headers: "Authorization: Bearer SECRET_RAW_HEADER",
     schemaMeta,
@@ -229,9 +233,11 @@ async function main() {
     diagnostic.omittedRowCandidateKeys,
     [
       "metadataRows",
+      "queryBundle",
       "queryData",
       "queryDataset",
       "queryEntries",
+      "queryFieldDataset",
       "queryList",
       "queryResponse",
       "queryResultSet",
@@ -273,6 +279,8 @@ async function main() {
   assert.match(diagnostic.metadata.qinfo.queryOutput, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.entries, /已省略潜在行数据/);
   assert.match(diagnostic.metadata.qinfo.dataSet, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.fieldDataset, /已省略潜在行数据/);
+  assert.match(diagnostic.metadata.qinfo.bundle, /已省略潜在行数据/);
   assert.strictEqual(diagnostic.metadata.qinfo.numericPrecision, "[已省略 BigInt]");
   assert.strictEqual(diagnostic.metadata.qinfo.marker, "[已省略 Symbol]");
   assert.match(diagnostic.metadata.qinfo.endpoint, /已省略可能包含凭证的字符串/);
@@ -347,6 +355,10 @@ async function main() {
     "SECRET_QUERY_ENTRIES",
     "SECRET_NESTED_DATASET",
     "SECRET_QUERY_DATASET",
+    "SECRET_NESTED_FIELD_DATASET",
+    "SECRET_QUERY_FIELD_DATASET",
+    "SECRET_NESTED_BUNDLE",
+    "SECRET_QUERY_BUNDLE",
     "OPAQUE_ACCOUNT_KEY",
     "OPAQUE_AWS_SECRET",
     "OPAQUE_ENCRYPTION_KEY",
