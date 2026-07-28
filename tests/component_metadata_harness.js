@@ -110,6 +110,12 @@ async function main() {
       ],
       required: ["id"],
     },
+    referenceSchema: {
+      $ref: "#/$defs/data",
+      $defs: {
+        data: {type: "string"},
+      },
+    },
     cookieHeader: "SID=OPAQUE_GENERIC_SESSION",
     dimensionMembers: [{caption: "SECRET_DIMENSION_MEMBER"}],
     dimensionMembersById: {member_1: {caption: "SECRET_DIMENSION_MEMBER_BY_ID"}},
@@ -121,6 +127,7 @@ async function main() {
     signatureHeaders: {
       "X-Amz-Signature": "OPAQUE_AWS_HEADER_SIGNATURE",
       "X-Goog-Signature": "OPAQUE_GOOGLE_HEADER_SIGNATURE",
+      "X-Hub-Signature-256": "sha256=OPAQUE_GITHUB_HEADER_SIGNATURE",
     },
     fields: [
       {
@@ -394,7 +401,7 @@ async function main() {
       serviceEndpoint: "https://example.com/api?authToken=OPAQUE_CAMEL_QUERY_TOKEN",
       serializedDescriptor: "{name:\"password\",value:\"OPAQUE_SERIALIZED_DESCRIPTOR_PASSWORD\"}",
       serializedDescriptorsText: "[{\"name\":\"region\",\"value\":\"west\"},{\"name\":\"password\",\"value\":\"OPAQUE_LATER_DESCRIPTOR_PASSWORD\"}]",
-      serializedHeaderTuple: "[\"name\",\"password\",\"value\",\"OPAQUE_SERIALIZED_TUPLE_TOKEN\"]",
+      serializedHeaderTuple: `${"x".repeat(460)}["name","password","value","${"p".repeat(100)}"]`,
       serializedReversedDescriptor: "{\"value\":\"OPAQUE_REVERSED_DESCRIPTOR_PASSWORD\",\"name\":\"password\"}",
       xmlDescriptor: "<property><name><![CDATA[password]]></name><value>OPAQUE_XML_DESCRIPTOR_PASSWORD</value></property>",
       xmlAttribute: "<connection password=\"OPAQUE_XML_ATTRIBUTE_PASSWORD\"/>",
@@ -697,6 +704,7 @@ async function main() {
   assert.deepStrictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.required, ["id"]);
   assert.strictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.items[0].type, "string");
   assert.strictEqual(diagnostic.metadata.fieldMeta.arrayTypeSchema.items[1], false);
+  assert.strictEqual(diagnostic.metadata.fieldMeta.referenceSchema.$defs.data.type, "string");
   assert.strictEqual(diagnostic.metadata[collisionOutputKey].expression, "FIRST_COLLISION_FORMULA");
   assert.strictEqual(diagnostic.metadata[`${collisionOutputKey}#2`].expression, "SECOND_COLLISION_FORMULA");
   assert.deepStrictEqual(
