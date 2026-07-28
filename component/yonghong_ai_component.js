@@ -724,6 +724,7 @@
       /\b(?:bearer|basic)\s+[a-z0-9+/_=.-]+/i.test(sample) ||
       /\beyJ[a-z0-9_-]{8,}\.[a-z0-9_-]{8,}/i.test(sample) ||
       /(?:[a-z][a-z0-9+.-]*:)?\/\/[^\/\s:@]*:[^\/\s@]+@/i.test(sample) ||
+      /(?:[?&]|%3f|%26)(?:sig|signature|awsaccesskeyid|x-amz-(?:credential|signature)|x-goog-(?:credential|signature))=/i.test(sample) ||
       /-----BEGIN (?:(?:RSA|DSA|EC|OPENSSH|ENCRYPTED) )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/i.test(sample) ||
       /\b(?:YHBISESSIONID|HWWAFSESID|HWWAFSESTIME)\s*=/i.test(sample)
     );
